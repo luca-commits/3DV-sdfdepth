@@ -12,7 +12,6 @@ def main(modeltag: str):
 
     # load data
     data_path = f"{os.getcwd()}/data"
-    version = "unnormalised_200000_bin_200"
     
     
     val_dataset = MonoDepthDataset(img_dir=os.join(data_path, "rgb_images"), target_dir=os.join(data_path, "data_depth_annotated"))
