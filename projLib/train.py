@@ -16,15 +16,15 @@ def main():
     data_path = f"{os.getcwd()}/../data"
 
     transform = transforms.Compose(
-    [transforms.ToTensor(),])
+    [transforms.ToTensor(), transforms.Resize([384, 1248])])
     
     val_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "data_depth_annotated/val"), transform=transform, target_transform=transform) #
     train_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "data_depth_annotated/train"), transform=transform, target_transform=transform) #
 
 
 
-    train_data_loader = DataLoader(train_dataset, batch_size=512, shuffle=True)
-    val_data_loader = DataLoader(val_dataset, batch_size=512, shuffle=True)
+    train_data_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
+    val_data_loader = DataLoader(val_dataset, batch_size=1, shuffle=True)
 
     model = ResNetUNet()
 
