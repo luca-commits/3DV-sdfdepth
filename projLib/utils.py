@@ -79,12 +79,12 @@ def train(model, trainloader, valloader, train_args):
             
             start = i*train_args["batch_size"]
             end = start + input.shape[0]
-            all_predictions[start:end] = outputs.detach().to("cpu").squeeze()
+            print(f"rhs size: {outputs.detach().to('cpu').squeeze().size()}")
+            all_predictions[start:end] = outputs.detach().to("cpu").squeeze() #
             all_targets[start:end] = target.to("cpu").squeeze()
 
             running_loss += loss.item()
 
-            print("hiiii")
         
         train_mse = running_loss/len(trainloader.dataset)
         val_mse, val_spearman, val_pearsoncorr = validate(model, valloader,train_args)

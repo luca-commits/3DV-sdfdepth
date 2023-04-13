@@ -36,6 +36,7 @@ def main():
         "scheduler": "ReduceLROnPlateau",
         "optimizer_args": { "lr": 0.0005},
         "verbose": True,
+        "batch_size": 1
     }
 
     print(train_args)

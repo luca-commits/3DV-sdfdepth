@@ -49,7 +49,7 @@ class ResNetUNet(torch.nn.Module):
     self.conv_original_size1 = convrelu(64, 64, 3, 1)
     self.conv_original_size2 = convrelu(64 + 128, 64, 3, 1)
 
-    # self.conv_last = nn.Conv2d(64, n_class, 1)
+    self.conv_last = nn.Conv2d(64, 1, 1)
 
   def forward(self, input):
     print(f"input size = {input.size()}")
@@ -103,7 +103,8 @@ class ResNetUNet(torch.nn.Module):
     x = torch.cat([x, x_original], dim=1)
     x = self.conv_original_size2(x)
 
-    # out = self.conv_last(x)
-    out = x
+    out = self.conv_last(x)
+    #out = x
+    print(f"out size: {out.size()}")
 
     return out
