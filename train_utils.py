@@ -32,7 +32,7 @@ def train(model, trainloader, valloader, config):
     device = config["device"]
     model.to(device)
 
-    optimizer = AdamW(model.parameters(), lr = config["lr"], weight_decay=config["weight_decay"])
+    optimizer = AdamW(model.parameters(), lr = config["lr"])
     scheduler = CosineAnnealingLR(optimizer, T_max=config["max_epochs"])
     criterion = MaskedMSELoss()
     

@@ -8,12 +8,13 @@ from train_utils import train
 import argparse
 import wandb
 from datasets import MonoDepthDataset
+from torchvision.transforms import ToTensor
 
-def main(config):    
-    val_dataset = MonoDepthDataset(img_dir=os.join(config["data_dir"],config["rgb_image_dir"]),
-                                   target_dir=os.join(config["data_dir"], config["depth_val_image_dir"]))
-    train_dataset = MonoDepthDataset(img_dir=os.join(config["data_dir"], config["rgb_image_dir"]),
-                                     target_dir=os.join(config["data_dir"], config["depth_train_image_dir"]))
+def main(config):
+    val_dataset = MonoDepthDataset(img_dir=os.path.join(config["data_dir"],config["rgb_image_dir"]),
+                                   target_dir=os.path.join(config["data_dir"], config["depth_val_image_dir"]), transform=ToTensor())
+    train_dataset = MonoDepthDataset(img_dir=os.path.join(config["data_dir"], config["rgb_image_dir"]),
+                                     target_dir=os.path.join(config["data_dir"], config["depth_train_image_dir"]), transform=ToTensor())
 
     val_data_loader = DataLoader(val_dataset, batch_size=config["batch_size"], shuffle=False)
     train_data_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
@@ -39,7 +40,7 @@ if __name__ == "__main__":
     parser.add_argument('--max_epochs', default=50, type=int)
     parser.add_argument('--lr', default=0.0001, type=float)
     parser.add_argument('--momentum', type=float, default=0.9)
-    parser.add_argument('--data_dir', default='/cluster/scratch/lrabuzin/data')
+    parser.add_argument('--data_dir', default='/home/lrabuzin/ETH/Sem3/3DV')
     parser.add_argument('--rgb_image_dir', default='KITTI/raw_data')
     parser.add_argument('--depth_train_image_dir', default='KITTI/train')
     parser.add_argument('--depth_val_image_dir', default='KITTI/val')
