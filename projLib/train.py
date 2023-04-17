@@ -21,23 +21,21 @@ def main():
     val_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "data_depth_annotated/val"), transform=transform, target_transform=transform) #
     train_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "data_depth_annotated/train"), transform=transform, target_transform=transform) #
 
-
-
-    train_data_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
-    val_data_loader = DataLoader(val_dataset, batch_size=1, shuffle=True)
-
     model = ResNetUNet()
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     train_args = {
-        "epochs": 50, 
+        "epochs": 1, 
         "device": device,
         "scheduler": "ReduceLROnPlateau",
         "optimizer_args": { "lr": 0.0005},
         "verbose": True,
-        "batch_size": 1
+        "batch_size": 2
     }
+
+    train_data_loader = DataLoader(train_dataset, batch_size=train_args["batch_size"], shuffle=True)
+    val_data_loader = DataLoader(val_dataset, batch_size=train_args["batch_size"], shuffle=True)
 
     print(train_args)
     results = train(model, train_data_loader, val_data_loader, train_args)
@@ -48,8 +46,15 @@ def main():
         # then create it.
         os.makedirs(pretrained_path)
 
+    modeltag = "unet.pth"
+
     model_path = f"{pretrained_path}/{modeltag}"
     torch.save(results["model"].state_dict(), model_path)
+
+    results["model"].eval().to("cpu")
+    with torch.no_grad():
+        visualise_prediction(train_dataset[0][0], train_dataset[0][1], results["model"](train_dataset[0][0].unsqueeze(0))[0], os.path.join(pretrained_path, "vis.png"))
+
 
 
 if __name__ == "__main__":

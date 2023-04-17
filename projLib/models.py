@@ -24,8 +24,8 @@ class ResNetUNet(torch.nn.Module):
     self.base_model = torchvision.models.resnet18(pretrained=True)
     self.base_layers = list(self.base_model.children())
 
-    for i in range(8):
-      print(f"layer {i}: {self.base_layers[i]}")
+    # for i in range(8):
+      # print(f"layer {i}: {self.base_layers[i]}")
 
     self.layer0 = nn.Sequential(*self.base_layers[:3]) # size=(N, 64, x.H/2, x.W/2)
     self.layer0_1x1 = convrelu(64, 64, 1, 0)
@@ -52,39 +52,39 @@ class ResNetUNet(torch.nn.Module):
     self.conv_last = nn.Conv2d(64, 1, 1)
 
   def forward(self, input):
-    print(f"input size = {input.size()}")
+    # print(f"input size = {input.size()}")
     x_original = self.conv_original_size0(input)
-    print(f"x_original size = {x_original.size()}")
+    # print(f"x_original size = {x_original.size()}")
     x_original = self.conv_original_size1(x_original)
-    print(f"x_original size = {x_original.size()}")
+    # print(f"x_original size = {x_original.size()}")
 
     layer0 = self.layer0(input)
-    print(f"layer0 size = {layer0.size()}")
+    # print(f"layer0 size = {layer0.size()}")
     layer1 = self.layer1(layer0)
-    print(f"layer1 size = {layer1.size()}")
+    # print(f"layer1 size = {layer1.size()}")
     layer2 = self.layer2(layer1)
-    print(f"layer2 size = {layer2.size()}")
+    # print(f"layer2 size = {layer2.size()}")
     layer3 = self.layer3(layer2)
-    print(f"layer3 size = {layer3.size()}")
+    # print(f"layer3 size = {layer3.size()}")
     layer4 = self.layer4(layer3)
-    print(f"layer4 size = {layer4.size()}")
+    # print(f"layer4 size = {layer4.size()}")
 
 
     layer4 = self.layer4_1x1(layer4)
-    print(f"layer4 after conv: {layer4.size()}")
+    # print(f"layer4 after conv: {layer4.size()}")
     x = self.upsample(layer4)
-    print(f"layer4 upsampled: {x.size()}")
+    # print(f"layer4 upsampled: {x.size()}")
     layer3 = self.layer3_1x1(layer3)
-    print(f"layer3 upsampled: {x.size()}")
+    # print(f"layer3 upsampled: {x.size()}")
     x = torch.cat([x, layer3], dim=1)
     x = self.conv_up3(x)
-    print(f'x size: {x.size()}, layer2 size: {layer2.size()}')
-    print(type(x))
+    # print(f'x size: {x.size()}, layer2 size: {layer2.size()}')
+    # print(type(x))
 
     x = self.upsample(x)
-    print(f'x size: {x.size()}')
+    # print(f'x size: {x.size()}')
     layer2 = self.layer2_1x1(layer2)
-    print(f"layer2 size: {layer2.size()}")
+    # print(f"layer2 size: {layer2.size()}")
 
     x = torch.cat([x, layer2], dim=1)
     x = self.conv_up2(x)
@@ -105,6 +105,6 @@ class ResNetUNet(torch.nn.Module):
 
     out = self.conv_last(x)
     #out = x
-    print(f"out size: {out.size()}")
+    # print(f"out size: {out.size()}")
 
     return out
