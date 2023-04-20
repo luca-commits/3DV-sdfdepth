@@ -33,7 +33,7 @@ def main():
         "scheduler": "LinearLR",
         "optimizer_args": { "lr": 0.0005},
         "verbose": True,
-        "batch_size": 32,
+        "batch_size": 16,
         "save_steps": 5
     }
 
