@@ -6,6 +6,8 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, LinearLR
 from tqdm import tqdm
 import copy
 from math import sqrt
+import os
+import wandb
 
 
 from loss import MaskedMSELoss
@@ -40,45 +42,39 @@ def visualise_prediction(image, gt_depth, predicted_depth, save_location) -> Non
 def validate(model, valloader, train_args):
 
     device = train_args["device"]
-    model.to(device)
+    model.to(device, non_blocking=True)
     model.eval()
 
     criterion = MaskedMSELoss()
     running_loss = 0.0
 
-    # all_predictions = []
-    # all_targets = []
-
     for i, (input, target, mask) in enumerate(valloader, 0):
         
-        #print(target.shape, input.shape, labels)
         if i == 0:
             start = i*input.shape[0]
         else:
             start = end
         end = start + input.shape[0]
 
-        input, target = input.to(device), target.to(device)
+        input, target = input.to(device, non_blocking=True), target.to(device, non_blocking=True)
         with torch.no_grad():
-            outputs = model(input)
-            loss = criterion(outputs, target, mask)
-            running_loss += loss
+            with torch.autocast(device_type=str(device)):
+                outputs = model(input)
+                loss = criterion(outputs, target, mask)
+                running_loss += loss
 
-            # all_predictions.extend([prediction.squeeze for prediction in outputs])
-            # all_targets.extend([targ.squeeze for targ in target])
-    
     return sqrt(running_loss/len(valloader))
             
 
 def train(model, trainloader, valloader, train_args):
     
     device = train_args["device"]
-    model.to(device)
+    model.to(device, non_blocking=True)
 
     optimizer = Adam(model.parameters(), **train_args["optimizer_args"])
 
     if train_args["scheduler"] == "LinearLR":
-        scheduler = LinearLR(optimizer=optimizer,total_iters=50,verbose = False, start_factor= 0.5)
+        scheduler = LinearLR(optimizer=optimizer,total_iters=train_args["epochs"],verbose = False, start_factor= 0.5)
     else:
         scheduler = ReduceLROnPlateau(optimizer, mode="max", factor=0.5, patience = 5)
     criterion = MaskedMSELoss()
@@ -88,45 +84,31 @@ def train(model, trainloader, valloader, train_args):
     best_mse = 10e8
 
     result_dict = {}  
-    for epoch in tqdm(range(train_args["epochs"])):
-        # print(f"started epoch {epoch}")
+    for epoch in range(train_args["epochs"]):
         model.train()
         running_loss = 0.0
-        # all_predictions = []
-        # all_targets = []
-        for i, (input, target, mask) in enumerate(trainloader):
-            # print(f"started batch {i} of {len(trainloader)}")
-            # print("Input Shape")
-            # print(input.shape)
+        for i, (input, target, mask) in tqdm(enumerate(trainloader), total=len(trainloader)):
             input, target = input.float().to(device), target.float().to(device)
             
             # zero the parameter gradients
-            optimizer.zero_grad()
+            optimizer.zero_grad(set_to_none=True)
 
             # forward + backward + optimize
-            outputs = model(input)
-            # print("Output shape")
-            # print(outputs.shape)
-            # print("Target shape")
-            # print(target.shape)
-            loss = criterion(outputs, target, mask)
-            # loss = loss.float()
+            with torch.autocast(device_type=str(device)):
+                outputs = model(input)
+                loss = criterion(outputs, target, mask)
             loss.backward()
             optimizer.step()
             
             start = i*train_args["batch_size"]
             end = start + input.shape[0]
-            # print(f"rhs size: {outputs.detach().to('cpu').squeeze().size()}")
-
-            # all_predictions.extend([prediction.squeeze for prediction in outputs])
-            # all_targets.extend([targ.squeeze for targ in target])
 
             running_loss += loss.item()
-
         
         train_mse = sqrt(running_loss/len(trainloader.dataset))
         val_mse = validate(model, valloader,train_args)
         print(f"Train rmse: {train_mse}, Validation rmse: {val_mse}")
+        wandb.log({"train/mse": train_mse, "val/mse": val_mse})
         
         if val_mse <= best_mse :
             best_mse = val_mse
@@ -134,6 +116,9 @@ def train(model, trainloader, valloader, train_args):
             best_epoch = epoch
             if train_args["verbose"]:
                 print(f"update in epoch {epoch}, {best_mse}", flush=True)
+        
+        if (epoch + 1) % train_args["save_steps"] == 0:
+            save_model(best_mse_model)
         
         if train_args["scheduler"] == "LinearLR":
             scheduler.step()
@@ -145,3 +130,10 @@ def train(model, trainloader, valloader, train_args):
     print("Best model", best_epoch, best_mse)
 
     return result_dict
+
+def save_model(model, modeltag = "unet.pth"):
+    pretrained_path = f"{os.getcwd()}/pretrained"
+    if not os.path.exists(pretrained_path):
+        os.makedirs(pretrained_path)
+    model_path = f"{pretrained_path}/{modeltag}"
+    torch.save(model.state_dict(), model_path)
