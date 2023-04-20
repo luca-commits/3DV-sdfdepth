@@ -98,6 +98,9 @@ def train(model, trainloader, valloader, train_args):
                 outputs = model(input)
                 loss = criterion(outputs, target, mask)
             loss.backward()
+
+            torch.nn.utils.clip_grad_norm_(model.parameters(), train_args["clip"])
+
             optimizer.step()
             
             start = i*train_args["batch_size"]
@@ -105,7 +108,7 @@ def train(model, trainloader, valloader, train_args):
 
             running_loss += loss.item()
         
-        train_mse = sqrt(running_loss/len(trainloader.dataset))
+        train_mse = sqrt(running_loss/len(trainloader))
         val_mse = validate(model, valloader,train_args)
         print(f"Train rmse: {train_mse}, Validation rmse: {val_mse}")
         wandb.log({"train/mse": train_mse, "val/mse": val_mse})
@@ -117,8 +120,12 @@ def train(model, trainloader, valloader, train_args):
             if train_args["verbose"]:
                 print(f"update in epoch {epoch}, {best_mse}", flush=True)
         
-        if (epoch + 1) % train_args["save_steps"] == 0:
+        if (epoch) % train_args["save_steps"] == 0:
             save_model(best_mse_model)
+            pretrained_path = f"{os.getcwd()}/pretrained"
+            best_mse_model.eval().to("cpu")
+            with torch.no_grad():
+                visualise_prediction(trainloader.dataset[0][0], trainloader.dataset[0][1], best_mse_model(trainloader.dataset[0][0].unsqueeze(0))[0], os.path.join(pretrained_path, "vis.png"))
         
         if train_args["scheduler"] == "LinearLR":
             scheduler.step()
