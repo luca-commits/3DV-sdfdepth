@@ -1,7 +1,5 @@
 import torch.nn as nn
 import torch.nn.functional as F
-<<<<<<< HEAD:utils.py
-=======
 import torch
 from torch.optim import Adam, SGD
 from torch.optim.lr_scheduler import ReduceLROnPlateau, LinearLR
@@ -14,7 +12,6 @@ import wandb
 
 from loss import MaskedMSELoss
 
->>>>>>> dee621b2c7769bca9111f340413e7ce31ad9b5f1:projLib/utils.py
 import matplotlib.pyplot as plt
 
 def visualise_sample(image, depth, mask = None) -> None:
@@ -29,8 +26,6 @@ def visualise_sample(image, depth, mask = None) -> None:
         if mask is not None:
             ax3.imshow(mask.permute(1, 2, 0).numpy())
             ax3.set_title("Mask")
-<<<<<<< HEAD:utils.py
-=======
 
 def visualise_prediction(image, gt_depth, predicted_depth, save_location) -> None:
         fig, (ax1, ax2, ax3) = plt.subplots(3)
@@ -142,4 +137,3 @@ def save_model(model, modeltag = "unet.pth"):
         os.makedirs(pretrained_path)
     model_path = f"{pretrained_path}/{modeltag}"
     torch.save(model.state_dict(), model_path)
->>>>>>> dee621b2c7769bca9111f340413e7ce31ad9b5f1:projLib/utils.py
