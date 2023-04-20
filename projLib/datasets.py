@@ -43,7 +43,8 @@ class MonoDepthDataset(torch.utils.data.Dataset):
                 self.targets.append(self.target_transform(Image.open(target_path)))
 
     def __len__(self) -> int:
-        return len(self.image_paths)
+        return 500
+        # return len(self.image_paths)
 
     def __getitem__(self, idx: int) -> Tuple[torch.FloatTensor, torch.FloatTensor, torch.BoolTensor]:
         if self.keep_in_memory:
