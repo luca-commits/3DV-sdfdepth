@@ -97,7 +97,7 @@ def train(model, trainloader, valloader, train_args):
             with torch.autocast(device_type=str(device)):
                 outputs = model(input)
                 loss = criterion(outputs, target, mask)
-            wandb.log(loss)
+            wandb.log({"training batch loss": loss})
             loss.backward()
 
             torch.nn.utils.clip_grad_norm_(model.parameters(), train_args["clip"])
