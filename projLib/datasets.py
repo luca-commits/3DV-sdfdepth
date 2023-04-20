@@ -58,6 +58,6 @@ class MonoDepthDataset(torch.utils.data.Dataset):
                 image = self.transform(image)
             if self.target_transform:
                 target = self.target_transform(target)
-        target = target / 20000.
+        target = target / 1000.
         mask = target > 0
         return image.float(), target.float(), mask

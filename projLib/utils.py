@@ -63,7 +63,7 @@ def validate(model, valloader, train_args):
                 loss = criterion(outputs, target, mask)
                 running_loss += loss
 
-    return sqrt(20*(running_loss/len(valloader))+1e-13)
+    return sqrt((running_loss/len(valloader))+1e-13)
             
 
 def train(model, trainloader, valloader, train_args):
@@ -109,7 +109,7 @@ def train(model, trainloader, valloader, train_args):
 
             running_loss += loss.item()
         
-        train_mse = sqrt(20*(running_loss/len(trainloader))+1e-13)
+        train_mse = sqrt((running_loss/len(trainloader))+1e-13)
         val_mse = validate(model, valloader,train_args)
         print(f"Train rmse: {train_mse}, Validation rmse: {val_mse}")
         wandb.log({"train/mse": train_mse, "val/mse": val_mse})
