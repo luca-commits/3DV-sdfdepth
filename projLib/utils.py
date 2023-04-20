@@ -88,7 +88,7 @@ def train(model, trainloader, valloader, train_args):
         model.train()
         running_loss = 0.0
         for i, (input, target, mask) in tqdm(enumerate(trainloader), total=len(trainloader)):
-            input, target = input.float().to(device), target.float().to(device)
+            input, target = input.float().to(device, non_blocking=True), target.float().to(device, non_blocking=True)
             
             # zero the parameter gradients
             optimizer.zero_grad(set_to_none=True)
