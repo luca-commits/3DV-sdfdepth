@@ -25,8 +25,8 @@ def main():
     target_transform = transforms.Compose(
     [transforms.ToTensor(), transforms.Resize([256, 768], InterpolationMode.NEAREST, antialias=False)])
     
-    val_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "data_depth_annotated/val"), transform=transform, target_transform=target_transform) #
-    train_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "data_depth_annotated/train"), transform=transform, target_transform=target_transform) #
+    val_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated/val"), transform=transform, target_transform=target_transform) #
+    train_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated/train"), transform=transform, target_transform=target_transform) #
 
     model = ResNetUNet()
 
@@ -34,12 +34,12 @@ def main():
     print(f"device:{device}")
 
     train_args = {
-        "epochs": 30,
+        "epochs": 20,
         "device": device,
         "scheduler": "LinearLR",
         "optimizer_args": { "lr": 0.0005},
         "verbose": True,
-        "batch_size": 32,
+        "batch_size": 4,
         "save_steps": 3,
         "clip": 2.0
     }
