@@ -34,7 +34,7 @@ def main():
     print(f"device:{device}")
 
     train_args = {
-        "epochs": 15,
+        "epochs": 30,
         "device": device,
         "scheduler": "LinearLR",
         "optimizer_args": { "lr": 0.0005},

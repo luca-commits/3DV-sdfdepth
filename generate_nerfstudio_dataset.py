@@ -159,7 +159,7 @@ def parse_transform_multicam(basedir, date, drive, start_frame_idx=0, end_frame_
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Train CNN')
+    parser = argparse.ArgumentParser(description='Generate Nerfstudio dataset')
     parser.add_argument('--basedir', type=str, required=True)
     parser.add_argument('--date', type=str, required=True)
     parser.add_argument('--drive', type=str, required=True)

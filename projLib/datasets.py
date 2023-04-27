@@ -2,6 +2,7 @@ import os
 import torch
 from typing import Tuple
 from tqdm import tqdm
+import numpy as np
 
 from PIL import Image
 
@@ -54,10 +55,12 @@ class MonoDepthDataset(torch.utils.data.Dataset):
             target_path = self.target_paths[idx]
             image = Image.open(img_path)
             target = Image.open(target_path)
+            image = np.asarray(image, dtype=np.float32) / 255.0
+            target = np.asarray(target, dtype=np.float32)
             if self.transform:
                 image = self.transform(image)
             if self.target_transform:
                 target = self.target_transform(target)
-        target = target / 1000.
+        target = target / 256.
         mask = target > 0
         return image.float(), target.float(), mask
