@@ -167,7 +167,7 @@ def train(model, trainloader, valloader, train_args):
             wandb.log({"training batch loss": loss})
             loss.backward()
 
-            # torch.nn.utils.clip_grad_norm_(model.parameters(), train_args["clip"])
+            torch.nn.utils.clip_grad_norm_(model.parameters(), train_args["clip"])
 
             optimizer.step()
 
