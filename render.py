@@ -259,3 +259,7 @@ Load a checkpoint, render a trajectory, and save as images.
 │ --eval-num-rays-per-chunk {None}|INT                                                                               │
 │                         Specifies number of rays per chunk during eval. (default: None)
 """
+
+
+# python render.py --load-config ../outputs/calib_test/monosdf/2023-04-27_155630/config.yml --output-path ../outputs/calib_test/monosdf_novel_views/2023-04-27_155630.png
+
