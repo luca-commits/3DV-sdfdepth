@@ -157,6 +157,7 @@ class RenderTrajectory:
         f = open(meta_data_path)
   
         meta = json.load(f)
+        print(meta)
 
         fx = []
         fy = []
@@ -165,6 +166,10 @@ class RenderTrajectory:
         camera_to_worlds = []
         for i, frame in enumerate(meta["frames"]):
 
+            print()
+            print("frame", i)
+            print(frame)
+            print()
             intrinsics = torch.tensor(frame["intrinsics"])
             camtoworld = torch.tensor(frame["camtoworld"])
             
