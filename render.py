@@ -26,6 +26,7 @@ from typing_extensions import Literal, assert_never
 
 from nerfstudio.cameras.camera_paths import get_path_from_json, get_spiral_path
 from nerfstudio.cameras.cameras import Cameras, CameraType
+from nerfstudio.cameras import camera_utils
 from nerfstudio.configs.base_config import Config  # pylint: disable=unused-import
 from nerfstudio.pipelines.base_pipeline import Pipeline
 from nerfstudio.utils import install_checks
@@ -196,14 +197,14 @@ class RenderTrajectory:
          # TODO: figure out if this is needed
         
         # Convert from COLMAP's/OPENCV's camera coordinate system to nerfstudio
-        #camera_to_worlds[:, 0:3, 1:3] *= -1
+        camera_to_worlds[:, 0:3, 1:3] *= -1
 
-        #if self.config.auto_orient:
-        #    camera_to_worlds, transform = camera_utils.auto_orient_and_center_poses(
-        #        camera_to_worlds,
-        #        method="up",
-        #        center_poses=False,
-       #    )
+        # if self.config.auto_orient:
+        camera_to_worlds, transform = camera_utils.auto_orient_and_center_poses(
+            camera_to_worlds,
+            method="up",
+            center_poses=False,
+        )
 
 
         height, width = meta["height"], meta["width"]
