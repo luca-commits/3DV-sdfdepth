@@ -25,7 +25,7 @@ from rich.progress import (
 from typing_extensions import Literal, assert_never
 
 from nerfstudio.cameras.camera_paths import get_path_from_json, get_spiral_path
-from nerfstudio.cameras.cameras import Cameras
+from nerfstudio.cameras.cameras import Cameras, CameraType
 from nerfstudio.configs.base_config import Config  # pylint: disable=unused-import
 from nerfstudio.pipelines.base_pipeline import Pipeline
 from nerfstudio.utils import install_checks
