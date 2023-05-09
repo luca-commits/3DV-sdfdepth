@@ -137,7 +137,7 @@ class RenderTrajectory:
 
         seconds = self.seconds
 
-        cameras = get_cameras(meta_data_path = metadata_path, cameras_save_path=camera_path_filename)
+        cameras = self.get_cameras(meta_data_path = metadata_path, cameras_save_path=camera_path_filename)
 
         _render_trajectory_video(
             pipeline,
