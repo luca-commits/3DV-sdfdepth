@@ -112,6 +112,8 @@ class RenderTrajectory:
     traj: Literal["spiral", "filename"] = "filename"
     # Scaling factor to apply to the camera image resolution.
     downscale_factor: int = 1
+    # Filename of the camera metadata to render.
+    metadata_path: Path = Path("meta_data.json")
     # Filename of the camera path to render.
     camera_path_filename: Path = Path("camera_path.json")
     # Name of the output file.
@@ -135,7 +137,7 @@ class RenderTrajectory:
 
         seconds = self.seconds
 
-        cameras = get_cameras(meta_data_path = "meta_data.json", cameras_save_path="cameras.json")
+        cameras = get_cameras(meta_data_path = metadata_path, cameras_save_path=camera_path_filename)
 
         _render_trajectory_video(
             pipeline,
@@ -263,3 +265,8 @@ Load a checkpoint, render a trajectory, and save as images.
 
 # python render.py --load-config ../outputs/calib_test/monosdf/2023-04-27_155630/config.yml --output-path ../outputs/calib_test/monosdf_novel_views/2023-04-27_155630.png
 
+# 
+#
+#sbatch --wrap="python render.py --load-config ../outputs/calib_test/monosdf/2023-04-27_155630/config.yml --output-path ../outputs/calib_test/monosdf_novel_views/2023-04-27_155630.png" --time=1:0:0 --gpus=1 --ntasks=4 --mem-per-cpu=16G --job-name=novel_views
+
+#
