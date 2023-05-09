@@ -113,7 +113,7 @@ class RenderTrajectory:
     # Scaling factor to apply to the camera image resolution.
     downscale_factor: int = 1
     # Filename of the camera metadata to render.
-    metadata_path: Path = Path("meta_data.json")
+    metadata_path: Path
     # Filename of the camera path to render.
     camera_path_filename: Path = Path("camera_path.json")
     # Name of the output file.
