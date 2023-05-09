@@ -203,6 +203,7 @@ class RenderTrajectory:
         camera_to_worlds, transform = camera_utils.auto_orient_and_center_poses(
             camera_to_worlds,
             method="up",
+            center_method="none",
             center_poses=True,
         )
 
