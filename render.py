@@ -32,6 +32,8 @@ from nerfstudio.utils import install_checks
 from nerfstudio.utils.eval_utils import eval_setup
 from nerfstudio.utils.rich_utils import ItersPerSecColumn
 
+import os
+
 CONSOLE = Console(width=120)
 
 
@@ -223,8 +225,9 @@ class RenderTrajectory:
         
         camera_path['cameras'] = camera_list
         
-        with open(os.path.join(save_loc,'transforms.json'),'w') as f:
-            json.dump(d,f,indent=4)
+        #maybe uncomment idek
+        # with open(os.path.join(save_loc,'transforms.json'),'w') as f:
+        #     json.dump(d,f,indent=4)
         
         
         return cameras
