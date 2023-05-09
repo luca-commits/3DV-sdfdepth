@@ -150,7 +150,7 @@ class RenderTrajectory:
         )
 
 
-    def get_cameras(meta_data_path = "meta_data.json", cameras_save_path="cameras.json"):
+    def get_cameras(self, meta_data_path = "meta_data.json", cameras_save_path="cameras.json"):
         # load meta data
         f = open(meta_data_path)
   
