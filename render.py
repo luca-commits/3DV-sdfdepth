@@ -106,14 +106,14 @@ class RenderTrajectory:
 
     # Path to config YAML file.
     load_config: Path
+    # Filename of the camera metadata to render.
+    metadata_path: Path
     # Name of the renderer outputs to use. rgb, depth, etc. concatenates them along y axis
     rendered_output_names: List[str] = field(default_factory=lambda: ["rgb"])
     #  Trajectory to render.
     traj: Literal["spiral", "filename"] = "filename"
     # Scaling factor to apply to the camera image resolution.
     downscale_factor: int = 1
-    # Filename of the camera metadata to render.
-    metadata_path: Path
     # Filename of the camera path to render.
     camera_path_filename: Path = Path("camera_path.json")
     # Name of the output file.
