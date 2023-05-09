@@ -206,8 +206,8 @@ class RenderTrajectory:
             center_poses=False,
         )
 
-
-        height, width = meta["height"], meta["width"]
+        # CHANGE THIS!!!!!!
+        height, width = 375, 1242#meta["height"], meta["width"]
         cameras = Cameras(
             fx=fx,
             fy=fy,
