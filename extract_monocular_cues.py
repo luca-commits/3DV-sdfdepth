@@ -180,7 +180,7 @@ def save_outputs(img_path, output_file_name):
         #if img_tensor.shape[1] == 1:
         #    img_tensor = img_tensor.repeat_interleave(3, 1)
 
-        output = model(img_tensor).clamp(min=0, max=1)
+        output = model(img_tensor_batch).clamp(min=0, max=1)
 
         merged_image = torch.zeros_like(img_tensor)
         merged_image[:, 0:H, H] = output[0]
