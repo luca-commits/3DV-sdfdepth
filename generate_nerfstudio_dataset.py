@@ -18,7 +18,8 @@ def get_frame_dict_single_cam(file_path, data,i, camera):
         calib = data.calib.T_cam3_imu
 
     transform_matrix = rotmat.dot(data.oxts[i].T_w_imu.dot(np.linalg.inv(calib)))
-        
+    transform_matrix[0:3, 1:3] *= -1
+
     return  {
             "file_path": file_path,
             "transform_matrix": [ list(transform_matrix[i]) for i in range(4)]
@@ -28,6 +29,7 @@ def get_frame_dict_single_cam(file_path, data,i, camera):
 def get_frame_dict_cam3(file_path, data,i, cam3_intrinsics):
 
     transform_matrix = rotmat.dot(data.oxts[i].T_w_imu.dot(np.linalg.inv(data.calib.T_cam3_imu)))
+    transform_matrix[0:3, 1:3] *= -1
 
     return  cam3_intrinsics | {
             "file_path": file_path,
@@ -36,7 +38,7 @@ def get_frame_dict_cam3(file_path, data,i, cam3_intrinsics):
 
 
 
-def parse_transform(basedir, date, drive, camera, start_frame_idx=0, end_frame_idx=None):
+def parse_transform(basedir, date, drive, camera, start_frame_idx=0, end_frame_idx=None, stride=None):
 
     data = pykitti.raw(basedir, date, drive)
 
@@ -86,7 +88,7 @@ def parse_transform(basedir, date, drive, camera, start_frame_idx=0, end_frame_i
 
 
 
-def parse_transform_multicam(basedir, date, drive, start_frame_idx=0, end_frame_idx=None):
+def parse_transform_multicam(basedir, date, drive, start_frame_idx=0, end_frame_idx=None, stride=None):
 
     data = pykitti.raw(basedir, date, drive)
 
@@ -166,11 +168,12 @@ if __name__ == "__main__":
     parser.add_argument('--camera', type=int, default=0)
     parser.add_argument('--start_frame', type=int, default=0)
     parser.add_argument('--end_frame', type=int, default=None)
+    parser.add_argument('--stride', type=int, default=None)
     args = parser.parse_args()
     if args.camera == 0:
-        parse_transform_multicam(args.basedir, args.date, args.drive, args.start_frame, args.end_frame)
+        parse_transform_multicam(args.basedir, args.date, args.drive, args.start_frame, args.end_frame, args.stride)
     else:
-        parse_transform(args.basedir, args.date, args.drive, args.camera, args.start_frame, args.end_frame)
+        parse_transform(args.basedir, args.date, args.drive, args.camera, args.start_frame, args.end_frame, args.stride)
 
 
 
