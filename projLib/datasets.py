@@ -13,7 +13,7 @@ class MonoDepthDataset(torch.utils.data.Dataset):
                  transform: torch.nn.Module = None,
                  target_transform: torch.nn.Module = None,
                  keep_in_memory: bool = False,
-                 image_list: list[str] = None) -> None:
+                 image_list = None) -> None:
         self.img_dir = img_dir
         self.target_dir = target_dir
         self.transform = transform
