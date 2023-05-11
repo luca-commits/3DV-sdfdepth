@@ -162,8 +162,8 @@ def save_outputs(img_path, output_file_name):
         if img_tensor.shape[0] == 1:
             img_tensor = img_tensor.repeat_interleave(3, 0)
 
-        H= img_tensor.shape[2]
-        W=img_tensor.shape[1]
+        W = img_tensor.shape[2]
+        H = img_tensor.shape[1]
 
         leftover_dim = W % H
 
