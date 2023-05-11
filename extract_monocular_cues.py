@@ -139,7 +139,7 @@ def save_outputs(img_path, output_file_name):
         img = Image.open(img_path)
         H, W = img.size[1], img.size[0]
         #assert H == W, "Image should be square"
-        assert H % 384 == 0, "Image size should be divisible by 384"
+        #assert H % 384 == 0, "Image size should be divisible by 384"
         scale_factor = H // 384
 
 
@@ -147,12 +147,14 @@ def save_outputs(img_path, output_file_name):
         tar_h = 384
         tar_w = int((W/H)*384)
 
+
         transnocrop_totensor = transforms.Compose(
             [
-                transforms.Resize((tar_h, tar_w), interpolation=PIL.Image.BILINEAR),
-                transforms.Resize(image_size, interpolation=PIL.Image.BILINEAR),
+                transforms.Resize((tar_w,tar_h), interpolation=PIL.Image.BILINEAR),
+                #transforms.Resize(image_size, interpolation=PIL.Image.BILINEAR),
                 #transforms.CenterCrop(image_size),
-                get_transform("rgb", image_size=None),
+                transforms.ToTensor(),
+                #get_transform("rgb", image_size=None),
             ]
         )
 
@@ -165,7 +167,9 @@ def save_outputs(img_path, output_file_name):
 
         leftover_dim = W % H
 
-        img_tensor_batch = torch.stack(img_tensor[:, 0:H, H], img_tensor[:, H:H*2, H], img_tensor[:, 2*H:H*3, H], img_tensor[:, W-H:W, H])
+        img_tensor_batch = torch.stack(
+            [img_tensor[:, 0:H, :H], img_tensor[:, H:H * 2, :H], img_tensor[:, 2 * H:H * 3, :H],
+             img_tensor[:, W - H:W, :H]])
 
         img_tensor_batch.to(device)
 
