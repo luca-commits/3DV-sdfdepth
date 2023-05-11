@@ -6,7 +6,7 @@ import pykitti
 
 import argparse
 
-rotmat = np.transpose(np.array([[1, 0, 0, 0],
+rotmat = np.transpose(np.array([[-1, 0, 0, 0],
                                 [0, 1, 0, 0],
                                 [0, 0, 1, 0],
                                 [0, 0, 0, 1]]))
@@ -29,6 +29,7 @@ def get_frame_dict_single_cam(file_path, data,i, camera):
 def get_frame_dict_cam3(file_path, data,i, cam3_intrinsics):
 
     transform_matrix = rotmat.dot(data.oxts[i].T_w_imu.dot(np.linalg.inv(data.calib.T_cam3_imu)))
+    transform_matrix[0:3, 1:3] *= -1
 
     return  cam3_intrinsics | {
             "file_path": file_path,
