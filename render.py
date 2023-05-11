@@ -221,7 +221,7 @@ class RenderTrajectory:
             rotmat_1 = rotmats_1[i]
             rotmat_2 = rotmats_2[i]
             
-            rotation_obj = R.from_matrix(np.stack(rotmat_1, rotmat_2))
+            rotation_obj = R.from_matrix(np.stack((rotmat_1, rotmat_2)))
 
             slerp = Slerp(np.array([0, 1]), rotation_obj)
             rotmat_i = slerp(0.5)
