@@ -137,7 +137,7 @@ def save_outputs(img_path, output_file_name):
         save_path = os.path.join(args.output_path, output_file_name.replace("_rgb", f"_{args.task}") + ".png")
         # print(f"Reading input {img_path} ...")
         img = Image.open(img_path)
-        H, W = img.size[1], img.size[0]
+        W, H = img.size[0], img.size[1]
         #assert H == W, "Image should be square"
         #assert H % 384 == 0, "Image size should be divisible by 384"
         scale_factor = H // 384
@@ -150,7 +150,7 @@ def save_outputs(img_path, output_file_name):
 
         transnocrop_totensor = transforms.Compose(
             [
-                transforms.Resize((tar_w,tar_h), interpolation=PIL.Image.BILINEAR),
+                transforms.Resize((tar_h,tar_w), interpolation=PIL.Image.BILINEAR),
                 #transforms.Resize(image_size, interpolation=PIL.Image.BILINEAR),
                 #transforms.CenterCrop(image_size),
                 transforms.ToTensor(),
@@ -168,8 +168,8 @@ def save_outputs(img_path, output_file_name):
         leftover_dim = W % H
 
         img_tensor_batch = torch.stack(
-            [img_tensor[:, 0:H, :], img_tensor[:, H:H * 2, :], img_tensor[:, 2 * H:H * 3, :],
-             img_tensor[:, W - H:W, :]])
+            [img_tensor[:, :, 0:H], img_tensor[:, :, H:H * 2], img_tensor[:, :, 2 * H:H * 3],
+             img_tensor[:, :, W - H:W]])
 
         img_tensor_batch.to(device)
 
@@ -182,12 +182,11 @@ def save_outputs(img_path, output_file_name):
 
         output = model(img_tensor_batch).clamp(min=0, max=1)
 
-        merged_image = torch.zeros_like(img_tensor)
-        merged_image[:, 0:H, :] = output[0]
-        merged_image[:, H:H*2, :] = output[1]
-        merged_image[:, 2*H:H*3, :] = output[2]
-        merged_image[:, H*3:, :] = output[3,:, H-leftover_dim:, :]
-
+        merged_image = torch.zeros((H,W))
+        merged_image[:, 0:H] = output[0]
+        merged_image[:, H:H*2] = output[1]
+        merged_image[:, 2*H:H*3] = output[2]
+        merged_image[:, H*3:] = output[3,:, H - leftover_dim:]
         # Now we have merged image ------------------------------------
 
         if args.task == "depth": ## This will not work anymore --
