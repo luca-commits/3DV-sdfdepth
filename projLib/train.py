@@ -13,20 +13,28 @@ import wandb
 import torchvision.transforms as transforms
 
 def main():
-    torch.autograd.detect_anomaly()
+    # torch.autograd.detect_anomaly()
     # load data
     data_path = f"{os.getcwd()}/../kitti"
 
     mean = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
 
+    train_files = load_eigen_train(os.path.join(os.getcwd(), "eigen_train_files.txt"))
+    val_files = load_eigen_split(os.path.join(os.getcwd(), "eigen_val_files.txt"))
+    test_files = load_eigen_split(os.path.join(os.getcwd(), "eigen_test_files.txt"))
+
     transform = transforms.Compose(
     [transforms.ToTensor(), transforms.Resize([256, 768]), transforms.Normalize(mean, std, inplace=True)])
     target_transform = transforms.Compose(
     [transforms.ToTensor(), transforms.Resize([256, 768], InterpolationMode.NEAREST, antialias=False)])
     
-    val_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated/val"), transform=transform, target_transform=target_transform) #
-    train_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated/train"), transform=transform, target_transform=target_transform) #
+    val_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated"), transform=transform, target_transform=target_transform, image_list=val_files) #
+    train_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated"), transform=transform, target_transform=target_transform, image_list=train_files) #
+    test_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated"), transform=transform, target_transform=target_transform, image_list=test_files) #
+    print(f"train dataset size: {len(train_dataset)}")
+    print(f"val dataset size: {len(val_dataset)}")
+    print(f"test dataset size: {len(test_dataset)}")
 
     model = ResNetUNet()
 
@@ -49,10 +57,15 @@ def main():
 
     train_data_loader = DataLoader(train_dataset, batch_size=train_args["batch_size"], shuffle=True, num_workers=4, pin_memory=True)
     val_data_loader = DataLoader(val_dataset, batch_size=train_args["batch_size"], shuffle=True, num_workers=4, pin_memory=True)
+    test_data_loader = DataLoader(test_dataset, batch_size=train_args["batch_size"], shuffle=True, num_workers=4, pin_memory=True)
 
     print(train_args)
     torch.backends.cudnn.benchmark = True
     results = train(model, train_data_loader, val_data_loader, train_args)
+
+    test_results = validate(model, test_data_loader, train_args)
+    test_results = {f"test/{k}": v for k, v in test_results.items()}
+    wandb.log(test_results)
 
     save_model(results["model"])
 

@@ -12,7 +12,8 @@ class MonoDepthDataset(torch.utils.data.Dataset):
                  target_dir: str = None,
                  transform: torch.nn.Module = None,
                  target_transform: torch.nn.Module = None,
-                 keep_in_memory: bool = False) -> None:
+                 keep_in_memory: bool = False,
+                 image_list: list[str] = None) -> None:
         self.img_dir = img_dir
         self.target_dir = target_dir
         self.transform = transform
@@ -22,17 +23,25 @@ class MonoDepthDataset(torch.utils.data.Dataset):
         self.target_paths = []
         self.target_masks = []
         self.target_folders = list(os.scandir(target_dir))
-        for folder in self.target_folders: # 
-            scene_name = os.path.basename(folder)
-            scene_date = "_".join(scene_name.split("_")[:3])
-            # if (scene_name in  ["2011_09_26_drive_0001_sync", "2011_09_26_drive_0002_sync"]):
-            camera_folders = list(os.scandir(os.path.join(folder, "proj_depth", "groundtruth")))
-            for camera_folder in camera_folders:
-                camera_name = os.path.basename(camera_folder)
-                for image in list(os.scandir(camera_folder)):
-                    image_name = os.path.basename(image)
-                    self.target_paths.append(image.path)
-                    self.image_paths.append(os.path.join(img_dir, scene_date, scene_name, camera_name, "data", image_name))
+        for partition in self.target_folders:
+            data_folders = list(os.scandir(os.path.join(target_dir, partition)))
+            for folder in data_folders: # 
+                scene_name = os.path.basename(folder)
+                scene_date = "_".join(scene_name.split("_")[:3])
+                # if (scene_name in  ["2011_09_26_drive_0001_sync", "2011_09_26_drive_0002_sync"]): #####
+                camera_folders = list(os.scandir(os.path.join(folder, "proj_depth", "groundtruth")))
+                for camera_folder in camera_folders:
+                    camera_name = os.path.basename(camera_folder)
+                    for image in list(os.scandir(camera_folder)):
+                        image_name = os.path.basename(image)
+                        if image_list is not None:
+                            eigen_path = os.path.join(scene_date, scene_name, camera_name, "data", image_name)
+                            pre, ext = os.path.splitext(eigen_path)
+                            eigen_path = pre + ".jpg"
+                            if eigen_path not in image_list:
+                                continue
+                        self.target_paths.append(image.path)
+                        self.image_paths.append(os.path.join(img_dir, scene_date, scene_name, camera_name, "data", image_name))
         if self.keep_in_memory:
             self.images = []
             self.targets = []

@@ -216,3 +216,36 @@ def save_model(model, modeltag = "unet.pth"):
         os.makedirs(pretrained_path)
     model_path = f"{pretrained_path}/{modeltag}"
     torch.save(model.state_dict(), model_path)
+
+
+def load_eigen_split(filename):
+    with open(filename, "r") as f:
+        files_0 = [line.split()[0] for line in f.readlines()]
+
+    with open(filename, "r") as f:
+        files_1 = [line.split()[1] for line in f.readlines()]
+
+    files = files_0 + files_1
+    return files
+
+def load_eigen_train(filename):
+    train_files = load_eigen_split(filename)
+    train_syncs = [train_file.split("/")[1] for train_file in train_files]
+    unique_train_syncs = sorted(list(set(train_syncs)))
+
+    subset_to_file_count = {sync:0 for sync in unique_train_syncs}
+    for file_sync in train_syncs:
+        subset_to_file_count[file_sync] += 1
+    
+    # print(subset_to_file_count)
+
+    small_subset = [sync for sync in subset_to_file_count if subset_to_file_count[sync] < 850]
+
+    files_syncs = list(zip(train_files, train_syncs))
+    filtered = [file_sync for file_sync in files_syncs if file_sync[1] in small_subset]
+
+    filtered_files, filtered_syncs = zip(*filtered)
+
+    print("length of small subset is", len(small_subset))
+
+    return filtered_files
