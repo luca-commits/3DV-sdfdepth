@@ -6,7 +6,7 @@ import pykitti
 
 import argparse
 
-rotmat = np.transpose(np.array([[-1, 0, 0, 0],
+rotmat = np.transpose(np.array([[1, 0, 0, 0],
                                 [0, 1, 0, 0],
                                 [0, 0, 1, 0],
                                 [0, 0, 0, 1]]))
@@ -36,7 +36,7 @@ def get_frame_dict_cam3(file_path, data,i, cam3_intrinsics):
 
 
 
-def parse_transform(basedir, date, drive, camera, start_frame_idx=0, end_frame_idx=None):
+def parse_transform(basedir, date, drive, camera, start_frame_idx=0, end_frame_idx=None, stride=None):
 
     data = pykitti.raw(basedir, date, drive)
 
@@ -86,7 +86,7 @@ def parse_transform(basedir, date, drive, camera, start_frame_idx=0, end_frame_i
 
 
 
-def parse_transform_multicam(basedir, date, drive, start_frame_idx=0, end_frame_idx=None):
+def parse_transform_multicam(basedir, date, drive, start_frame_idx=0, end_frame_idx=None, stride=None):
 
     data = pykitti.raw(basedir, date, drive)
 
@@ -166,11 +166,12 @@ if __name__ == "__main__":
     parser.add_argument('--camera', type=int, default=0)
     parser.add_argument('--start_frame', type=int, default=0)
     parser.add_argument('--end_frame', type=int, default=None)
+    parser.add_argument('--stride', type=int, default=None)
     args = parser.parse_args()
     if args.camera == 0:
-        parse_transform_multicam(args.basedir, args.date, args.drive, args.start_frame, args.end_frame)
+        parse_transform_multicam(args.basedir, args.date, args.drive, args.start_frame, args.end_frame, args.stride)
     else:
-        parse_transform(args.basedir, args.date, args.drive, args.camera, args.start_frame, args.end_frame)
+        parse_transform(args.basedir, args.date, args.drive, args.camera, args.start_frame, args.end_frame, args.stride)
 
 
 
