@@ -153,7 +153,7 @@ def save_outputs(img_path, output_file_name):
                 transforms.Resize((tar_h,tar_w), interpolation=PIL.Image.BILINEAR),
                 #transforms.Resize(image_size, interpolation=PIL.Image.BILINEAR),
                 #transforms.CenterCrop(image_size),
-                transforms.ToTensor(),
+                transforms.ToTensor()
                 #get_transform("rgb", image_size=None),
             ]
         )
@@ -182,11 +182,11 @@ def save_outputs(img_path, output_file_name):
 
         output = model(img_tensor_batch).clamp(min=0, max=1)
 
-        merged_image = torch.zeros((H,W))
-        merged_image[:, 0:H] = output[0]
-        merged_image[:, H:H*2] = output[1]
-        merged_image[:, 2*H:H*3] = output[2]
-        merged_image[:, H*3:] = output[3,:, H - leftover_dim:]
+        merged_image = torch.zeros((3,H,W))
+        merged_image[:,:, 0:H] = output[0]
+        merged_image[:,:, H:H*2] = output[1]
+        merged_image[:,:, 2*H:H*3] = output[2]
+        merged_image[:,:, H*3:] = output[3,:,:, H - leftover_dim:]
         # Now we have merged image ------------------------------------
 
         if args.task == "depth": ## This will not work anymore --
