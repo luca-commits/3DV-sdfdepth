@@ -128,29 +128,32 @@ def main(args):
     if args.mono_prior:
         # get smallest side to generate square crop
         target_crop = min(h, w)
-        tar_h = tar_w = 384 * args.crop_mult
+        #tar_h = tar_w = 384 * args.crop_mult
+        tar_h = 384
+        tar_w = int((w/h)*384)
+
         rgb_trans = transforms.Compose(
             [
-                transforms.CenterCrop(target_crop),
+                #transforms.CenterCrop(target_crop),
                 transforms.Resize((tar_h, tar_w), interpolation=PIL.Image.BILINEAR)
             ]
         )
         depth_trans = transforms.Compose(
             [
                 transforms.Resize((h, w), interpolation=PIL.Image.NEAREST),
-                transforms.CenterCrop(target_crop),
+                #transforms.CenterCrop(target_crop),
                 transforms.Resize((tar_h, tar_w), interpolation=PIL.Image.NEAREST)
             ]
         )
 
         # Update camera intrinsics
-        offset_x = (w - target_crop) * 0.5
-        offset_y = (h - target_crop) * 0.5
+        #offset_x = (w - target_crop) * 0.5
+        #offset_y = (h - target_crop) * 0.5
         resize_factor = tar_h / target_crop
         for intrinsics in cam_intrinsics:
             # center crop by min_dim
-            intrinsics[0, 2] -= offset_x
-            intrinsics[1, 2] -= offset_y
+        #    intrinsics[0, 2] -= offset_x
+        #    intrinsics[1, 2] -= offset_y
             # resize from min_dim x min_dim -> to 384 x 384
             intrinsics[:2, :] *= resize_factor
 
@@ -225,7 +228,8 @@ def main(args):
         # generate mono depth and normal
         print("Generating mono depth...")
         os.system(
-            f"python scripts/datasets/extract_monocular_cues.py \
+            #f"python scripts/datasets/extract_monocular_cues.py \
+            f"python extract_monocular_cues.py \
             --omnidata_path {args.omnidata_path} \
             --pretrained_model {args.pretrained_models} \
             --img_path {output_dir} --output_path {output_dir} \
@@ -233,11 +237,13 @@ def main(args):
         )
         print("Generating mono normal...")
         os.system(
-            f"python scripts/datasets/extract_monocular_cues.py \
+            #f"python scripts/datasets/extract_monocular_cues.py \
+            f"python extract_monocular_cues.py \
             --omnidata_path {args.omnidata_path} \
             --pretrained_model {args.pretrained_models} \
             --img_path {output_dir} --output_path {output_dir} \
             --task normal"
+
         )
 
     print(f"Done! The processed data has been saved in {output_dir}")

@@ -142,10 +142,14 @@ def save_outputs(img_path, output_file_name):
         assert H % 384 == 0, "Image size should be divisible by 384"
         scale_factor = H // 384
 
+
         # --- NEW -----------------------------
+        tar_h = 384
+        tar_w = int((W/H)*384)
 
         transnocrop_totensor = transforms.Compose(
             [
+                transforms.Resize((tar_h, tar_w), interpolation=PIL.Image.BILINEAR),
                 transforms.Resize(image_size, interpolation=PIL.Image.BILINEAR),
                 #transforms.CenterCrop(image_size),
                 get_transform("rgb", image_size=None),
