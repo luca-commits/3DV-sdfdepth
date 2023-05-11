@@ -168,8 +168,8 @@ def save_outputs(img_path, output_file_name):
         leftover_dim = W % H
 
         img_tensor_batch = torch.stack(
-            [img_tensor[:, 0:H, :H], img_tensor[:, H:H * 2, :H], img_tensor[:, 2 * H:H * 3, :H],
-             img_tensor[:, W - H:W, :H]])
+            [img_tensor[:, 0:H, :], img_tensor[:, H:H * 2, :], img_tensor[:, 2 * H:H * 3, :],
+             img_tensor[:, W - H:W, :]])
 
         img_tensor_batch.to(device)
 
@@ -183,10 +183,10 @@ def save_outputs(img_path, output_file_name):
         output = model(img_tensor_batch).clamp(min=0, max=1)
 
         merged_image = torch.zeros_like(img_tensor)
-        merged_image[:, 0:H, H] = output[0]
-        merged_image[:, H:H*2, H] = output[1]
-        merged_image[:, 2*H:H*3, H] = output[2]
-        merged_image[:, H*3:, H] = output[3, H-leftover_dim, H]
+        merged_image[:, 0:H, :] = output[0]
+        merged_image[:, H:H*2, :] = output[1]
+        merged_image[:, 2*H:H*3, :] = output[2]
+        merged_image[:, H*3:, :] = output[3,:, H-leftover_dim:, :]
 
         # Now we have merged image ------------------------------------
 
