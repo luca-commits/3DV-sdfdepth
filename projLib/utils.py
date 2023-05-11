@@ -54,8 +54,9 @@ class RunningAverageDict:
 
 
 def compute_errors(gt_orig, pred_orig):
-    gt = gt_orig.cpu()
-    pred = pred_orig.cpu()
+    gt, pred = gt_orig * 80., pred_orig * 80.
+    gt = gt.cpu()
+    pred = pred.cpu()
     thresh = np.maximum((gt / pred), (pred / gt))
     a1 = (thresh < 1.25).float().mean()
     a2 = (thresh < 1.25 ** 2).float().mean()
@@ -77,6 +78,7 @@ def compute_errors(gt_orig, pred_orig):
                 silog=silog, sq_rel=sq_rel)
 
 def visualise_sample(image, depth, mask = None) -> None:
+        depth = depth * 80.
         if mask is not None:
             fig, (ax1, ax2, ax3, ax4) = plt.subplots(4)
         else:
@@ -90,15 +92,17 @@ def visualise_sample(image, depth, mask = None) -> None:
             ax3.set_title("Mask")
 
 def visualise_prediction(image, gt_depth, predicted_depth, save_location) -> None:
+        gt = gt_depth * 80.
+        pred = predicted_depth * 80.
         fig, (ax1, ax2, ax3) = plt.subplots(3)
         fig.tight_layout(pad=1.2)
         ax1.imshow(image.permute(1, 2, 0).numpy())
         ax1.set_title("RGB Image")
-        max_depth = max(gt_depth.max().item(), predicted_depth.max().item())
-        min_depth = max(gt_depth.min().item(), predicted_depth.min().item())
-        ax2.imshow(gt_depth.permute(1, 2, 0).numpy(), vmax = max_depth, vmin=min_depth)
+        max_depth = max(gt.max().item(), pred.max().item())
+        min_depth = max(gt.min().item(), pred.min().item())
+        ax2.imshow(gt.permute(1, 2, 0).numpy(), vmax = max_depth, vmin=min_depth)
         ax2.set_title("Depth map")
-        im = ax3.imshow(predicted_depth.permute(1, 2, 0).detach().numpy(), vmax = max_depth, vmin=min_depth)
+        im = ax3.imshow(pred.permute(1, 2, 0).detach().numpy(), vmax = max_depth, vmin=min_depth)
         ax3.set_title("Predicted depth")
         fig.subplots_adjust(right=0.8)
         cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])

@@ -25,12 +25,15 @@ from rich.progress import (
 from typing_extensions import Literal, assert_never
 
 from nerfstudio.cameras.camera_paths import get_path_from_json, get_spiral_path
-from nerfstudio.cameras.cameras import Cameras
+from nerfstudio.cameras.cameras import Cameras, CameraType
+from nerfstudio.cameras import camera_utils
 from nerfstudio.configs.base_config import Config  # pylint: disable=unused-import
 from nerfstudio.pipelines.base_pipeline import Pipeline
 from nerfstudio.utils import install_checks
 from nerfstudio.utils.eval_utils import eval_setup
 from nerfstudio.utils.rich_utils import ItersPerSecColumn
+
+import os
 
 CONSOLE = Console(width=120)
 
@@ -106,14 +109,14 @@ class RenderTrajectory:
 
     # Path to config YAML file.
     load_config: Path
+    # Filename of the camera metadata to render.
+    metadata_path: Path
     # Name of the renderer outputs to use. rgb, depth, etc. concatenates them along y axis
     rendered_output_names: List[str] = field(default_factory=lambda: ["rgb"])
     #  Trajectory to render.
     traj: Literal["spiral", "filename"] = "filename"
     # Scaling factor to apply to the camera image resolution.
     downscale_factor: int = 1
-    # Filename of the camera metadata to render.
-    metadata_path: Path = Path("meta_data.json")
     # Filename of the camera path to render.
     camera_path_filename: Path = Path("camera_path.json")
     # Name of the output file.
@@ -137,7 +140,7 @@ class RenderTrajectory:
 
         seconds = self.seconds
 
-        cameras = get_cameras(meta_data_path = metadata_path, cameras_save_path=camera_path_filename)
+        cameras = self.get_cameras(meta_data_path = self.metadata_path, cameras_save_path=self.camera_path_filename)
 
         _render_trajectory_video(
             pipeline,
@@ -150,11 +153,12 @@ class RenderTrajectory:
         )
 
 
-    def get_cameras(meta_data_path = "meta_data.json", cameras_save_path="cameras.json"):
+    def get_cameras(self, meta_data_path = "meta_data.json", cameras_save_path="cameras.json"):
         # load meta data
         f = open(meta_data_path)
   
         meta = json.load(f)
+        print(meta)
 
         fx = []
         fy = []
@@ -163,6 +167,10 @@ class RenderTrajectory:
         camera_to_worlds = []
         for i, frame in enumerate(meta["frames"]):
 
+            print()
+            print("frame", i)
+            print(frame)
+            print()
             intrinsics = torch.tensor(frame["intrinsics"])
             camtoworld = torch.tensor(frame["camtoworld"])
             
@@ -189,17 +197,17 @@ class RenderTrajectory:
          # TODO: figure out if this is needed
         
         # Convert from COLMAP's/OPENCV's camera coordinate system to nerfstudio
-        #camera_to_worlds[:, 0:3, 1:3] *= -1
+        camera_to_worlds[:, 0:3, 1:3] *= -1
 
-        #if self.config.auto_orient:
-        #    camera_to_worlds, transform = camera_utils.auto_orient_and_center_poses(
-        #        camera_to_worlds,
-        #        method="up",
-        #        center_poses=False,
-       #    )
+        # if self.config.auto_orient:
+        camera_to_worlds, transform = camera_utils.auto_orient_and_center_poses(
+            camera_to_worlds,
+            method="up",
+            center_poses=False,
+        )
 
-
-        height, width = meta["height"], meta["width"]
+        # CHANGE THIS!!!!!!
+        height, width = 375, 1242#meta["height"], meta["width"]
         cameras = Cameras(
             fx=fx,
             fy=fy,
@@ -223,8 +231,9 @@ class RenderTrajectory:
         
         camera_path['cameras'] = camera_list
         
-        with open(os.path.join(save_loc,'transforms.json'),'w') as f:
-            json.dump(d,f,indent=4)
+        #maybe uncomment idek
+        # with open(os.path.join(save_loc,'transforms.json'),'w') as f:
+        #     json.dump(d,f,indent=4)
         
         
         return cameras
