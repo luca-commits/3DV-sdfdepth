@@ -23,7 +23,7 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 from typing_extensions import Literal, assert_never
-
+from scipy.spatial.transform import Slerp, Rotation as R
 from nerfstudio.cameras.camera_paths import get_path_from_json, get_spiral_path
 from nerfstudio.cameras.cameras import Cameras, CameraType
 from nerfstudio.cameras import camera_utils
@@ -37,6 +37,13 @@ import os
 
 CONSOLE = Console(width=120)
 
+def get_rotmat(theta):
+    theta = theta * np.pi / 180
+
+    rotmat = np.transpose(np.array([[np.cos(theta), -np.sin(theta), 0],
+                                [np.sin(theta), np.cos(theta), 0],
+                                [0, 0, 1]]))
+    return rotmat
 
 def _render_trajectory_video(
     pipeline: Pipeline,
@@ -192,7 +199,45 @@ class RenderTrajectory:
         cy = torch.stack(cy)
         camera_to_worlds = torch.stack(camera_to_worlds)
         
+        num_images = len(camera_to_worlds)
+
+        camera_to_worlds_1 = camera_to_worlds[:(num_images//2), :, :]
+        camera_to_worlds_2 = camera_to_worlds[(num_images//2):, :, :]
+
+        t_1 = camera_to_worlds_1[:,0:3,3]
+        t_2 = camera_to_worlds_2[:,0:3,3]
+
+        t_i = (t_1 + t_2)/2
+        t_i = np.vstack((t_i,t_i))
+
+        rotmats_1 = camera_to_worlds_1[:,0:3,0:3]
+        rotmats_2 = camera_to_worlds_2[:,0:3,0:3]
+
+        rotmats_i1 = []
+        rotmats_i2 = []
+        rotmat_1 = get_rotmat(10)
+        rotmat_2 = get_rotmat(-10)
+        for i in range (len(rotmats_1)):
+            rotmat_1 = rotmats_1[i]
+            rotmat_2 = rotmats_2[i]
+            
+            rotation_obj = R.from_matrix(np.stack(rotmat_1, rotmat_2))
+
+            slerp = Slerp(np.array([0, 1]), rotation_obj)
+            rotmat_i = slerp(0.5)
+            rotmat_i = rotmat_i.as_matrix()
+
+            rotmat_i1 = np.dot(rotmat_1, rotmat_i)
+            rotmat_i2 = np.dot(rotmat_2, rotmat_i)
+
+            rotmats_i1.append(rotmat_i1)
+            rotmats_i2.append(rotmat_i2)
         
+        rotmats_i = np.vstack((rotmats_i1, rotmats_i2))
+
+        camera_to_worlds = np.zeros((num_images, 4, 4))
+        camera_to_worlds[:,0:3,0:3] = rotmats_i
+        camera_to_worlds[:,0:3,3] = t_i
         
          # TODO: figure out if this is needed
         
