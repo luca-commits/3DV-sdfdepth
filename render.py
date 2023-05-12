@@ -244,6 +244,8 @@ class RenderTrajectory:
         # Convert from COLMAP's/OPENCV's camera coordinate system to nerfstudio
         camera_to_worlds[:, 0:3, 1:3] *= -1
 
+        camera_to_worlds = torch.tensor(camera_to_worlds).float()
+
         # if self.config.auto_orient:
         camera_to_worlds, transform = camera_utils.auto_orient_and_center_poses(
             camera_to_worlds,
