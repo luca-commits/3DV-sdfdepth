@@ -118,7 +118,7 @@ def parse_transform_multicam(basedir, date, drive, start_frame_idx=0, end_frame_
 
 
     d = cam2_intrinsics
-    d = d | {
+    d = { **d,
         "w": 1242,
         "h": 375,
         "camera_model": "OPENCV",
@@ -132,12 +132,12 @@ def parse_transform_multicam(basedir, date, drive, start_frame_idx=0, end_frame_
 
     folder_cam2 = f"image_02/data"
     full_cam2_folder_path = os.path.join(save_loc, folder_cam2)
-    all_frames_cam2 = sorted(os.listdir(full_cam2_folder_path))
-
+    all_frames_cam2 = [ path for path in sorted(os.listdir(full_cam2_folder_path)) if '.png' in path ]
+    
     folder_cam3 = f"image_03/data"
     full_cam3_folder_path = os.path.join(save_loc, folder_cam3)
-    all_frames_cam3 = sorted(os.listdir(full_cam3_folder_path))
-
+    all_frames_cam3 = [ path for path in sorted(os.listdir(full_cam2_folder_path)) if '.png' in path ]
+    
     frame_dicts = []
 
     if end_frame_idx is None:
