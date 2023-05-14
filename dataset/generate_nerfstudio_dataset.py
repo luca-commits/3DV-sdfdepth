@@ -31,10 +31,10 @@ def get_frame_dict_cam3(file_path, data,i, cam3_intrinsics):
     transform_matrix = rotmat.dot(data.oxts[i].T_w_imu.dot(np.linalg.inv(data.calib.T_cam3_imu)))
     transform_matrix[0:3, 1:3] *= -1
 
-    return  cam3_intrinsics | {
+    return  { **cam3_intrinsics,
             "file_path": file_path,
             "transform_matrix": [ list(transform_matrix[i]) for i in range(4)]
-        }
+    }
 
 
 
