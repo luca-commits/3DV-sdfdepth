@@ -242,6 +242,8 @@ class RenderTrajectory:
         camera_to_worlds[:,0:3,0:3] = rotmats_i
         camera_to_worlds[:,0:3,3] = t_i
         
+        print(camera_to_worlds.shape)
+        print(camera_to_worlds[0])
          # TODO: figure out if this is needed
         
         # Convert from COLMAP's/OPENCV's camera coordinate system to nerfstudio
