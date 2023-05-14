@@ -199,6 +199,9 @@ class RenderTrajectory:
         cy = torch.stack(cy)
         camera_to_worlds = torch.stack(camera_to_worlds)
         
+        ## moved this up here
+        # camera_to_worlds[:, 0:3, 1:3] *= -1
+
         num_images = len(camera_to_worlds)
 
         camera_to_worlds_1 = camera_to_worlds[:(num_images//2), :, :]
@@ -215,8 +218,8 @@ class RenderTrajectory:
 
         rotmats_i1 = []
         rotmats_i2 = []
-        rotmat_1 = get_rotmat(1)
-        rotmat_2 = get_rotmat(-1)
+        rotmat_1 = get_rotmat(5)
+        rotmat_2 = get_rotmat(-5)
         for i in range (len(rotmats_1)):
             rotmat_1 = rotmats_1[i]
             rotmat_2 = rotmats_2[i]
@@ -236,9 +239,12 @@ class RenderTrajectory:
         rotmats_i = np.vstack((rotmats_i1, rotmats_i2))
 
         camera_to_worlds = np.zeros((num_images, 4, 4))
+        camera_to_worlds[:,3,3] = 1
         camera_to_worlds[:,0:3,0:3] = rotmats_i
         camera_to_worlds[:,0:3,3] = t_i
         
+        print(camera_to_worlds.shape)
+        print(camera_to_worlds[0])
          # TODO: figure out if this is needed
         
         # Convert from COLMAP's/OPENCV's camera coordinate system to nerfstudio
@@ -246,12 +252,12 @@ class RenderTrajectory:
 
         camera_to_worlds = torch.tensor(camera_to_worlds).float()
 
-        # if self.config.auto_orient:
-        camera_to_worlds, transform = camera_utils.auto_orient_and_center_poses(
-            camera_to_worlds,
-            method="up",
-            center_poses=False,
-        )
+        # # if self.config.auto_orient:
+        # camera_to_worlds, transform = camera_utils.auto_orient_and_center_poses(
+        #     camera_to_worlds,
+        #     method="up",
+        #     center_poses=False,
+        # )
 
         # CHANGE THIS!!!!!!
         height, width = 375, 1242#meta["height"], meta["width"]
