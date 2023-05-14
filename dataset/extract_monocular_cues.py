@@ -46,23 +46,59 @@ trans_topil = transforms.ToPILImage()
 os.system(f"mkdir -p {args.output_path}")
 map_location = (lambda storage, loc: storage.cuda()) if torch.cuda.is_available() else torch.device("cpu")
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device('mps')
+map_location = torch.device('mps')
 
+# Fits the depth of d1 to be consistent with d0
+def fit_depth(d0, d1, overlap):
+    c = d0.shape[0]
+    
+    d0_fit = d0[:, c-overlap:].reshape(-1)
+    d1_fit = d1[:, :overlap].reshape(-1)
+
+    d0_fit = d0_fit.unsqueeze(-1)
+    d1_fit = torch.stack([d1_fit, torch.ones_like(d1_fit)], axis=-1)
+
+    params = torch.linalg.lstsq(d1_fit, d0_fit)
+    
+    d1_adjusted = params[0][0, 0] * d1.squeeze() + params[0][1, 0]
+    
+    return d1_adjusted.unsqueeze(-1)
+
+# Fits the depth of n1 to be consistent with n0
+def fit_normal(n0, n1, overlap):
+    c = n0.shape[0]
+    
+    # Colour channel comes first
+    n0_fit = n0[:, c-overlap:].permute([2, 0, 1]).reshape(3, -1)
+    n1_fit = n1[:, :overlap].permute([2, 0, 1]).reshape(3, -1)
+
+    n0_mean = torch.mean(n0_fit, dim=1)
+    n1_mean = torch.mean(n1_fit, dim=1)
+
+    n0_fit = n0_fit - n0_mean.unsqueeze(-1)
+    n1_fit = n1_fit - n1_mean.unsqueeze(-1)
+
+    # Special least squares to obtain a rotation-reflection matrix
+    S = n1_fit @ n0_fit.T
+
+    U, Sigma, V = torch.svd(S, some=False, compute_uv=True)
+    Lambda = torch.eye(3)
+    Lambda[-1, -1] = torch.det(V @ U.T)
+    
+    R = torch.matmul(V, torch.matmul(Lambda, U.T))
+    
+    # Residual
+    t = n0_mean - R @ n1_mean
+    
+    # print(torch.matmul(R, n1_fit).shape, t.unsqueeze(-1).shape)
+    # print(R, torch.linalg.norm(n0_fit - n1_fit), torch.linalg.norm(n0_fit - torch.matmul(R, n1_fit)))
+    
+    return (R @ n1.unsqueeze(-1)).squeeze()
 
 # get target task and model
 if args.task == "normal":
     image_size = 384
-
-    ## Version 1 model
-    # pretrained_weights_path = root_dir + 'omnidata_unet_normal_v1.pth'
-    # model = UNet(in_channels=3, out_channels=3)
-    # checkpoint = torch.load(pretrained_weights_path, map_location=map_location)
-
-    # if 'state_dict' in checkpoint:
-    #     state_dict = {}
-    #     for k, v in checkpoint['state_dict'].items():
-    #         state_dict[k.replace('model.', '')] = v
-    # else:
-    #     state_dict = checkpoint
 
     pretrained_weights_path = os.path.join(root_dir, "omnidata_dpt_normal_v2.ckpt")
     model = DPTDepthModel(backbone="vitb_rn50_384", num_channels=3)  # DPT Hybrid
@@ -91,14 +127,6 @@ elif args.task == "depth":
         state_dict = checkpoint
     model.load_state_dict(state_dict)
     model.to(device)
-    trans_totensor = transforms.Compose(
-        [
-            transforms.Resize(image_size, interpolation=PIL.Image.BILINEAR),
-            transforms.CenterCrop(image_size),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=0.5, std=0.5),
-        ]
-    )
 
 else:
     print("task should be one of the following: normal, depth")
@@ -112,97 +140,109 @@ trans_rgb = transforms.Compose(
 )
 
 
-def standardize_depth_map(img, mask_valid=None, trunc_value=0.1):
-    if mask_valid is not None:
-        img[~mask_valid] = torch.nan
-    sorted_img = torch.sort(torch.flatten(img))[0]
-    # Remove nan, nan at the end of sort
-    num_nan = sorted_img.isnan().sum()
-    if num_nan > 0:
-        sorted_img = sorted_img[:-num_nan]
-    # Remove outliers
-    trunc_img = sorted_img[int(trunc_value * len(sorted_img)):int((1 - trunc_value) * len(sorted_img))]
-    trunc_mean = trunc_img.mean()
-    trunc_var = trunc_img.var()
-    eps = 1e-6
-    # Replace nan by mean
-    img = torch.nan_to_num(img, nan=trunc_mean)
-    # Standardize
-    img = (img - trunc_mean) / torch.sqrt(trunc_var + eps)
-    return img
-
-
 def save_outputs(img_path, output_file_name):
+    save_path = os.path.join(args.output_path, output_file_name.replace("_rgb", f"_{args.task}") + ".png")
+    # print(f"Reading input {img_path} ...")
+    img = Image.open(img_path)
+
+    # --- NEW -----------------------------
+    # How much two crops should overlap to do least squares fitting
+    overlap = 120
+
+    # Size of a crop
+    c = 384
+    h, w, _ = np.shape(img)
+
+    target_h = c
+    target_w = w * target_h // h
+
+    transform = transforms.Compose(
+        [
+            transforms.Resize((target_h, target_w), interpolation=PIL.Image.BILINEAR),
+            transforms.ToTensor()
+        ]
+    )
+
+    img = transform(img).to(device)
+
+    n_crops = int(np.ceil(target_w / (c - overlap)))
+
+    # For a given index of a crop in an image, gets the left alignment of the crop in an image
+    get_left_align = lambda i: np.minimum(np.maximum(0, i * (c - overlap)), target_w - c)
+
+    # Segregate the image into multiple overlapping crops
+    crops = []
+    for i in range(n_crops):
+        left_align = get_left_align(i)
+        crops.append(img[:, :, left_align:left_align+c])
+
+    crops_batched = torch.stack(crops)
+
     with torch.no_grad():
-        save_path = os.path.join(args.output_path, output_file_name.replace("_rgb", f"_{args.task}") + ".png")
-        # print(f"Reading input {img_path} ...")
-        img = Image.open(img_path)
-        W, H = img.size[0], img.size[1]
-        #assert H == W, "Image should be square"
-        #assert H % 384 == 0, "Image size should be divisible by 384"
-        scale_factor = H // 384
+        output_raw = model(crops_batched).cpu()
 
+    # Output dimension handling and normalization
+    if args.task == 'normal':
+        # Colour channel comes last
+        output_raw = torch.permute(output_raw, [0, 2, 3, 1])
 
-        # --- NEW -----------------------------
-        tar_h = 384
-        tar_w = int((W/H)*384)
-
-
-        transnocrop_totensor = transforms.Compose(
-            [
-                transforms.Resize((tar_h,tar_w), interpolation=PIL.Image.BILINEAR),
-                #transforms.Resize(image_size, interpolation=PIL.Image.BILINEAR),
-                #transforms.CenterCrop(image_size),
-                transforms.ToTensor()
-                #get_transform("rgb", image_size=None),
-            ]
-        )
-
-        img_tensor = transnocrop_totensor(img)[:3]
-        if img_tensor.shape[0] == 1:
-            img_tensor = img_tensor.repeat_interleave(3, 0)
-
-        W = img_tensor.shape[2]
-        H = img_tensor.shape[1]
-
-        leftover_dim = W % H
-
-        img_tensor_batch = torch.stack(
-            [img_tensor[:, :, 0:H], img_tensor[:, :, H:H * 2], img_tensor[:, :, 2 * H:H * 3],
-             img_tensor[:, :, W - H:W]])
-
-        img_tensor_batch.to(device)
-
-        # DO THING
-
-        #img_tensor = trans_totensor(img)[:3].unsqueeze(0).to(device)
-
-        #if img_tensor.shape[1] == 1:
-        #    img_tensor = img_tensor.repeat_interleave(3, 1)
-
-        output = model(img_tensor_batch).clamp(min=0, max=1)
-
-        merged_image = torch.zeros((3,H,W))
-        merged_image[:,:, 0:H] = output[0]
-        merged_image[:,:, H:H*2] = output[1]
-        merged_image[:,:, 2*H:H*3] = output[2]
-        merged_image[:,:, H*3:] = output[3,:,:, H - leftover_dim:]
-        # Now we have merged image ------------------------------------
-
-        if args.task == "depth": ## This will not work anymore --
-            if scale_factor > 1:
-                output = F.interpolate(output.unsqueeze(0), scale_factor=scale_factor, mode="nearest").squeeze(0)
-            output = output.clamp(0, 1)
-
-            np.save(save_path.replace(".png", ".npy"), output.detach().cpu().numpy()[0])
-            plt.imsave(save_path, output.detach().cpu().squeeze(), cmap="viridis")
+        # Normalize to unit vectors (Model output is in [0, 1], but has to be in [-1, -1])
+        output_batched = (2. * output_raw - 1.) / torch.linalg.vector_norm(2. * output_raw - 1., dim=-1).unsqueeze(-1)
+    else:
+        output_batched = output_raw.unsqueeze(-1)
+    
+    # Do least squares fitting to match the different maps
+    output_adjusted = [ output_batched[0] ]
+    for i in range(1, n_crops):
+        if args.task == 'normal':
+            output_adjusted.append(fit_normal(output_adjusted[i-1], output_batched[i], overlap))
         else:
-            if scale_factor > 1:
-                output = torch.nn.functional.interpolate(output, scale_factor=scale_factor, mode="nearest")
-            np.save(save_path.replace(".png", ".npy"), merged_image.detach().cpu().numpy())
-            trans_topil(merged_image).save(save_path)
+            output_adjusted.append(fit_depth(output_adjusted[i-1], output_batched[i], overlap))
 
-        # print(f"Writing output {save_path} ...")
+    # Put the maps back into one big map
+    if args.task == 'normal':
+        output = torch.zeros((target_h, target_w, 3))
+    else:
+        output = torch.zeros((target_h, target_w, 1))
+    for i in range(0, n_crops):
+        left_align = get_left_align(i)
+        output[:, left_align:left_align+c] = output_adjusted[i]
+
+    # Linearly interpolate between the maps to smoothen
+    output_smoothed = output.clone().detach()
+    for i in range(1, n_crops):
+        # Left alignment of the crop to the left
+        left_align_l = get_left_align(i-1)
+
+        # Left image of the current crop
+        left_align_r = get_left_align(i)
+
+        # The overlap can be bigger than the defined overlap if the right-most crop had to be pushed left to fit into the image
+        true_overlap = left_align_l + c - left_align_r
+
+        weights = torch.linspace(0., 1., true_overlap).unsqueeze(0).unsqueeze(-1)
+
+        # Linear interpolation
+        output_smoothed[:, left_align_r:left_align_l + c] = (1. - weights) * output_adjusted[i-1][:, c-true_overlap:] \
+                                                          + weights * output_adjusted[i][:, :true_overlap]
+
+    # Smoothing has messed up unit vectors, renormalize
+    if args.task == 'normal':
+        output_smoothed /= torch.linalg.vector_norm(output_smoothed, dim=-1).unsqueeze(-1)
+    # Now we have merged image ------------------------------------
+
+    if args.task == "depth": ## This will not work anymore --
+        output_smoothed = output_smoothed.clamp(0, 1).squeeze()
+
+        np.save(save_path.replace(".png", ".npy"), output_smoothed.detach().cpu().numpy())
+        plt.imsave(save_path, output_smoothed.detach().cpu().squeeze(), cmap="viridis")
+    else:
+        output_smoothed = output_smoothed.permute([2, 0, 1])
+        
+        np.save(save_path.replace(".png", ".npy"), output_smoothed.detach().cpu().numpy())
+        trans_topil(output_smoothed).save(save_path)
+
+    # print(f"Writing output {save_path} ...")
 
 
 img_path = Path(args.img_path)

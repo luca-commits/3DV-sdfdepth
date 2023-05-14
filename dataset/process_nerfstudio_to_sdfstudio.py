@@ -53,7 +53,7 @@ def main(args):
 
         # load images
         file_path = Path(frame["file_path"])
-        img_path = input_dir / "images" / file_path.name
+        img_path = input_dir / file_path
         assert img_path.exists()
         image_paths.append(img_path)
 
@@ -130,31 +130,23 @@ def main(args):
         target_crop = min(h, w)
         #tar_h = tar_w = 384 * args.crop_mult
         tar_h = 384
-        tar_w = int((w/h)*384)
+        tar_w = w * tar_h // h
 
         rgb_trans = transforms.Compose(
             [
-                #transforms.CenterCrop(target_crop),
                 transforms.Resize((tar_h, tar_w), interpolation=PIL.Image.BILINEAR)
             ]
         )
         depth_trans = transforms.Compose(
             [
                 transforms.Resize((h, w), interpolation=PIL.Image.NEAREST),
-                #transforms.CenterCrop(target_crop),
                 transforms.Resize((tar_h, tar_w), interpolation=PIL.Image.NEAREST)
             ]
         )
 
         # Update camera intrinsics
-        #offset_x = (w - target_crop) * 0.5
-        #offset_y = (h - target_crop) * 0.5
-        resize_factor = tar_h / target_crop
+        resize_factor = tar_h / h
         for intrinsics in cam_intrinsics:
-            # center crop by min_dim
-        #    intrinsics[0, 2] -= offset_x
-        #    intrinsics[1, 2] -= offset_y
-            # resize from min_dim x min_dim -> to 384 x 384
             intrinsics[:2, :] *= resize_factor
 
     # Do nothing if we don't want to use mono prior
@@ -226,15 +218,6 @@ def main(args):
         assert os.path.exists(args.pretrained_models), "Pretrained model path not found"
         assert os.path.exists(args.omnidata_path), "omnidata l path not found"
         # generate mono depth and normal
-        print("Generating mono depth...")
-        os.system(
-            #f"python scripts/datasets/extract_monocular_cues.py \
-            f"python extract_monocular_cues.py \
-            --omnidata_path {args.omnidata_path} \
-            --pretrained_model {args.pretrained_models} \
-            --img_path {output_dir} --output_path {output_dir} \
-            --task depth"
-        )
         print("Generating mono normal...")
         os.system(
             #f"python scripts/datasets/extract_monocular_cues.py \
@@ -244,6 +227,16 @@ def main(args):
             --img_path {output_dir} --output_path {output_dir} \
             --task normal"
 
+        )
+        
+        print("Generating mono depth...")
+        os.system(
+            #f"python scripts/datasets/extract_monocular_cues.py \
+            f"python extract_monocular_cues.py \
+            --omnidata_path {args.omnidata_path} \
+            --pretrained_model {args.pretrained_models} \
+            --img_path {output_dir} --output_path {output_dir} \
+            --task depth"
         )
 
     print(f"Done! The processed data has been saved in {output_dir}")
