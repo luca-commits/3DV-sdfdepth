@@ -199,7 +199,8 @@ class RenderTrajectory:
         cy = torch.stack(cy)
         camera_to_worlds = torch.stack(camera_to_worlds)
         
-        camera_to_worlds[:, 0:3, 1:3] *= -1
+        ## moved this up here
+        # camera_to_worlds[:, 0:3, 1:3] *= -1
 
         num_images = len(camera_to_worlds)
 
@@ -247,6 +248,7 @@ class RenderTrajectory:
          # TODO: figure out if this is needed
         
         # Convert from COLMAP's/OPENCV's camera coordinate system to nerfstudio
+        # camera_to_worlds[:, 0:3, 1:3] *= -1
 
         camera_to_worlds = torch.tensor(camera_to_worlds).float()
 
