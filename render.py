@@ -215,8 +215,8 @@ class RenderTrajectory:
 
         rotmats_i1 = []
         rotmats_i2 = []
-        rotmat_1 = get_rotmat(1)
-        rotmat_2 = get_rotmat(-1)
+        rotmat_1 = get_rotmat(5)
+        rotmat_2 = get_rotmat(-5)
         for i in range (len(rotmats_1)):
             rotmat_1 = rotmats_1[i]
             rotmat_2 = rotmats_2[i]
@@ -236,6 +236,7 @@ class RenderTrajectory:
         rotmats_i = np.vstack((rotmats_i1, rotmats_i2))
 
         camera_to_worlds = np.zeros((num_images, 4, 4))
+        camera_to_worlds[:,3,3] = 1
         camera_to_worlds[:,0:3,0:3] = rotmats_i
         camera_to_worlds[:,0:3,3] = t_i
         
