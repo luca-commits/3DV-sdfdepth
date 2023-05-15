@@ -39,7 +39,7 @@ root_dir = args.pretrained_models
 omnidata_path = args.omnidata_path
 
 sys.path.append(args.omnidata_path)
-print(sys.path)
+# print(sys.path)
 from data.transforms import get_transform
 from modules.midas.dpt_depth import DPTDepthModel
 from modules.unet import UNet

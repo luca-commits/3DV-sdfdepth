@@ -69,12 +69,16 @@ def main(args):
 
         image_paths.append(img_path)
 
+    if len(image_paths) == 0:
+        raise RuntimeError("No depths available!")
+        
     # Check correctness
     assert len(poses) == len(image_paths)
     assert len(poses) == len(cam_intrinsics) or len(cam_intrinsics) == 1
 
     # Filter invalid poses
     poses = np.array(poses)
+
     valid_poses = np.isfinite(poses).all(axis=2).all(axis=1)
     min_vertices = poses[:, :3, 3][valid_poses].min(axis=0)
     max_vertices = poses[:, :3, 3][valid_poses].max(axis=0)
@@ -223,27 +227,27 @@ def main(args):
         assert os.path.exists(args.omnidata_path), "omnidata l path not found"
         # generate mono depth and normal
         
-        if depth_dir is not None:
-            print("Generating mono normal...")
+        if depth_dir is None:
+            print("Generating mono depth...")
             os.system(
                 #f"python scripts/datasets/extract_monocular_cues.py \
                 f"python extract_monocular_cues.py \
                 --omnidata_path {args.omnidata_path} \
                 --pretrained_model {args.pretrained_models} \
                 --img_path {output_dir} --output_path {output_dir} \
-                --task normal"
+                --task depth"
             )
         else:
             print("Skipping generating mono depth because upsampled depth is available.")
         
-        print("Generating mono depth...")
+        print("Generating mono normal...")
         os.system(
             #f"python scripts/datasets/extract_monocular_cues.py \
             f"python extract_monocular_cues.py \
             --omnidata_path {args.omnidata_path} \
             --pretrained_model {args.pretrained_models} \
             --img_path {output_dir} --output_path {output_dir} \
-            --task depth"
+            --task normal"
         )
 
     print(f"Done! The processed data has been saved in {output_dir}")
