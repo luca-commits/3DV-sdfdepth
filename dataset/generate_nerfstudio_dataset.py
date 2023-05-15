@@ -170,6 +170,7 @@ if __name__ == "__main__":
     parser.add_argument('--end_frame', type=int, default=None)
     parser.add_argument('--stride', type=int, default=None)
     args = parser.parse_args()
+    
     if args.camera == 0:
         parse_transform_multicam(args.basedir, args.date, args.drive, args.start_frame, args.end_frame, args.stride)
     else:

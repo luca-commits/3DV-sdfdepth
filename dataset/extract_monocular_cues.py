@@ -14,6 +14,8 @@ from PIL import Image
 from torchvision import transforms
 from tqdm import tqdm
 
+torch.set_num_threads(8)
+
 parser = argparse.ArgumentParser(description="Visualize output for depth or surface normals")
 
 parser.add_argument("--omnidata_path", dest="omnidata_path", help="path to omnidata model")
@@ -46,8 +48,8 @@ trans_topil = transforms.ToPILImage()
 os.system(f"mkdir -p {args.output_path}")
 map_location = (lambda storage, loc: storage.cuda()) if torch.cuda.is_available() else torch.device("cpu")
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-device = torch.device('mps')
-map_location = torch.device('mps')
+# device = torch.device('mps')
+# map_location = torch.device('mps')
 
 # Fits the depth of d1 to be consistent with d0
 def fit_depth(d0, d1, overlap):
