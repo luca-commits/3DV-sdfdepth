@@ -31,3 +31,4 @@ ns-train monosdf \
 sdfstudio-data \
 --data /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/datasets_poster/${SCENE_NAME} \
 --auto-orient True \
+--include-mono-prior True
