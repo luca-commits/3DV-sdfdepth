@@ -134,6 +134,8 @@ class RenderTrajectory:
     output_format: Literal["images", "video"] = "images"
     # Specifies number of rays per chunk during eval.
     eval_num_rays_per_chunk: Optional[int] = None
+    #angle for rotating novel views
+    angle: float = 0.0
 
     def main(self) -> None:
         """Main function."""
@@ -147,7 +149,7 @@ class RenderTrajectory:
 
         seconds = self.seconds
 
-        cameras = self.get_cameras(meta_data_path = self.metadata_path, cameras_save_path=self.camera_path_filename)
+        cameras = self.get_cameras(meta_data_path = self.metadata_path, cameras_save_path=self.camera_path_filename, angle = self.angle)
 
         _render_trajectory_video(
             pipeline,
@@ -160,7 +162,7 @@ class RenderTrajectory:
         )
 
 
-    def get_cameras(self, meta_data_path = "meta_data.json", cameras_save_path="cameras.json"):
+    def get_cameras(self, meta_data_path = "meta_data.json", cameras_save_path="cameras.json", angle=0.0):
         # load meta data
         f = open(meta_data_path)
   
@@ -218,8 +220,8 @@ class RenderTrajectory:
 
         rotmats_i1 = []
         rotmats_i2 = []
-        rotmat_out_1 = get_rotmat(5)
-        rotmat_out_2 = get_rotmat(5)
+        rotmat_out_1 = get_rotmat(angle)
+        rotmat_out_2 = get_rotmat(angle)
         for i in range (len(rotmats_1)):
             rotmat_1 = rotmats_1[i]
             rotmat_2 = rotmats_2[i]
