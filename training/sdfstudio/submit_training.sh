@@ -3,8 +3,7 @@
 #SBATCH -c 8
 #SBATCH --time=16:00:00
 #SBATCH --mem-per-cpu=2G
-#SBATCH --gpus=1
-#SBATCH --gres=gpumem:12g
+#SBATCH --gpus=rtx_3090:1
 #SBATCH -A s_stud_infk 
 #SBATCH --job-name=sdfstudio_training
 #SBATCH --output=sdfstudio_training.out
