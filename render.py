@@ -211,32 +211,34 @@ class RenderTrajectory:
         t_2 = camera_to_worlds_2[:,0:3,3]
 
         t_i = (t_1 + t_2)/2
-        t_i = np.vstack((t_i,t_i))
+        #change
+        t_i = np.vstack((t_1,t_2))
 
         rotmats_1 = camera_to_worlds_1[:,0:3,0:3]
         rotmats_2 = camera_to_worlds_2[:,0:3,0:3]
 
-        rotmats_i1 = []
-        rotmats_i2 = []
-        rotmat_1 = get_rotmat(5)
-        rotmat_2 = get_rotmat(-5)
-        for i in range (len(rotmats_1)):
-            rotmat_1 = rotmats_1[i]
-            rotmat_2 = rotmats_2[i]
+        # rotmats_i1 = []
+        # rotmats_i2 = []
+        # rotmat_1 = get_rotmat(5)
+        # rotmat_2 = get_rotmat(-5)
+        # for i in range (len(rotmats_1)):
+        #     rotmat_1 = rotmats_1[i]
+        #     rotmat_2 = rotmats_2[i]
             
-            rotation_obj = R.from_matrix(np.stack((rotmat_1, rotmat_2)))
+        #     rotation_obj = R.from_matrix(np.stack((rotmat_1, rotmat_2)))
 
-            slerp = Slerp(np.array([0, 1]), rotation_obj)
-            rotmat_i = slerp(0.5)
-            rotmat_i = rotmat_i.as_matrix()
+        #     slerp = Slerp(np.array([0, 1]), rotation_obj)
+        #     rotmat_i = slerp(0.5)
+        #     rotmat_i = rotmat_i.as_matrix()
 
-            rotmat_i1 = np.dot(rotmat_1, rotmat_i)
-            rotmat_i2 = np.dot(rotmat_2, rotmat_i)
+        #     rotmat_i1 = np.dot(rotmat_1, rotmat_i)
+        #     rotmat_i2 = np.dot(rotmat_2, rotmat_i)
 
-            rotmats_i1.append(rotmat_i1)
-            rotmats_i2.append(rotmat_i2)
+        #     rotmats_i1.append(rotmat_i1)
+        #     rotmats_i2.append(rotmat_i2)
         
-        rotmats_i = np.vstack((rotmats_i1, rotmats_i2))
+        #change
+        rotmats_i = np.vstack((rotmats_1, rotmats_2))
 
         camera_to_worlds = np.zeros((num_images, 4, 4))
         camera_to_worlds[:,3,3] = 1
@@ -252,12 +254,12 @@ class RenderTrajectory:
 
         camera_to_worlds = torch.tensor(camera_to_worlds).float()
 
-        # # if self.config.auto_orient:
-        # camera_to_worlds, transform = camera_utils.auto_orient_and_center_poses(
-        #     camera_to_worlds,
-        #     method="up",
-        #     center_poses=False,
-        # )
+        # if self.config.auto_orient:
+        camera_to_worlds, transform = camera_utils.auto_orient_and_center_poses(
+            camera_to_worlds,
+            method="up",
+            center_poses=False,
+        )
 
         # CHANGE THIS!!!!!!
         height, width = 375, 1242#meta["height"], meta["width"]
