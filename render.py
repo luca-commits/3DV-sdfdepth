@@ -100,7 +100,7 @@ def _render_trajectory_video(
                 if rendered_output_names[0] == "depth":
                     print(render_image.shape)
                     render_image = np.squeeze(render_image, axis=2)
-                    render_image = (render_image*20000).astype(np.uint16)
+                    render_image = (render_image).astype(np.uint16)
                 media.write_image(output_image_dir / f"{camera_idx:05d}.png", render_image)
             else:
                 images.append(render_image)
