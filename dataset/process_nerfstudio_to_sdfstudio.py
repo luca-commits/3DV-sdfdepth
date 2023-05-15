@@ -18,6 +18,7 @@ def main(args):
     """
     output_dir = Path(args.output_dir)
     input_dir = Path(args.input_dir)
+    depth_dir = Path(args.depth_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     cam_params = json.load(open(input_dir / "transforms.json"))
 
@@ -47,21 +48,26 @@ def main(args):
         # OpenGL/Blender convention, needs to change to COLMAP/OpenCV convention
         # https://docs.nerf.studio/en/latest/quickstart/data_conventions.html
         # IGNORED for now
-        c2w = np.array(frame["transform_matrix"]).reshape(4, 4)
-        c2w[0:3, 1:3] *= -1
-        poses.append(c2w)
 
         # load images
         file_path = Path(frame["file_path"])
         img_path = input_dir / file_path
-        assert img_path.exists()
-        image_paths.append(img_path)
 
-        # load sensor depths
-        if args.data_type == "polycam" and args.sensor_depth:
-            depth_path = input_dir / "depths" / f"{file_path.stem}.png"
-            assert depth_path.exists()
+        assert img_path.exists()
+
+        if depth_dir is not None:
+            depth_path = depth_dir / file_path
+
+            if not depth_path.exists():
+                continue
+
             depth_paths.append(depth_path)
+
+        c2w = np.array(frame["transform_matrix"]).reshape(4, 4)
+        c2w[0:3, 1:3] *= -1
+        poses.append(c2w)
+
+        image_paths.append(img_path)
 
     # Check correctness
     assert len(poses) == len(image_paths)
@@ -175,23 +181,21 @@ def main(args):
             "intrinsics": cam_intrinsics[0].tolist() if args.data_type == "colmap" else cam_intrinsics[idx].tolist()
         }
 
-        if args.sensor_depth:
-            # load depth
-            depth_path = depth_paths[idx]
-            out_depth_path = output_dir / f"{out_index:06d}_sensor_depth.png"
-            depth = cv2.imread(str(depth_path), -1).astype(np.float32) / 1000.0
-            depth_PIL = Image.fromarray(depth)
-            new_depth = depth_trans(depth_PIL)
-            new_depth = np.asarray(new_depth)
-            # scale depth as we normalize the scene to unit box
-            new_depth = np.copy(new_depth) * scene_scale
-            plt.imsave(out_depth_path, new_depth, cmap="viridis")
-            np.save(str(out_depth_path).replace(".png", ".npy"), new_depth)
-
-            frame["sensor_depth_path"] = rgb_path.replace("_rgb.png", "_sensor_depth.npy")
-
         if args.mono_prior:
             frame["mono_depth_path"] = rgb_path.replace("_rgb.png", "_depth.npy")
+
+            if depth_dir is not None:
+                depth_path = depth_paths[idx]
+                out_depth_path = output_dir / f"{out_index:06d}_depth.png"
+                depth = cv2.imread(str(depth_path), -1).astype(np.float32) / 1000.0
+                depth_PIL = Image.fromarray(depth)
+                new_depth = depth_trans(depth_PIL)
+                new_depth = np.asarray(new_depth)
+                # scale depth as we normalize the scene to unit box
+                new_depth = np.copy(new_depth) * scene_scale
+                plt.imsave(out_depth_path, new_depth, cmap="viridis")
+                np.save(str(out_depth_path).replace(".png", ".npy"), new_depth)
+
             frame["mono_normal_path"] = rgb_path.replace("_rgb.png", "_normal.npy")
 
         frames.append(frame)
@@ -203,7 +207,7 @@ def main(args):
         "height": tar_h,
         "width": tar_w,
         "has_mono_prior": args.mono_prior,
-        "has_sensor_depth": args.sensor_depth,
+        "has_sensor_depth": False,
         "has_foreground_mask": False,
         "pairs": None,
         "worldtogt": scale_mat.tolist(),
@@ -218,16 +222,19 @@ def main(args):
         assert os.path.exists(args.pretrained_models), "Pretrained model path not found"
         assert os.path.exists(args.omnidata_path), "omnidata l path not found"
         # generate mono depth and normal
-        print("Generating mono normal...")
-        os.system(
-            #f"python scripts/datasets/extract_monocular_cues.py \
-            f"python extract_monocular_cues.py \
-            --omnidata_path {args.omnidata_path} \
-            --pretrained_model {args.pretrained_models} \
-            --img_path {output_dir} --output_path {output_dir} \
-            --task normal"
-
-        )
+        
+        if depth_dir is not None:
+            print("Generating mono normal...")
+            os.system(
+                #f"python scripts/datasets/extract_monocular_cues.py \
+                f"python extract_monocular_cues.py \
+                --omnidata_path {args.omnidata_path} \
+                --pretrained_model {args.pretrained_models} \
+                --img_path {output_dir} --output_path {output_dir} \
+                --task normal"
+            )
+        else:
+            print("Skipping generating mono depth because upsampled depth is available.")
         
         print("Generating mono depth...")
         os.system(
@@ -247,6 +254,7 @@ if __name__ == "__main__":
                                                  "currently support colmap and polycam")
 
     parser.add_argument("--data", dest="input_dir", required=True, help="path to nerfstudio data directory")
+    parser.add_argument("--depth-data", dest="depth_dir", help="path to upsampled depths", default=None)
     parser.add_argument("--output-dir", dest="output_dir", required=True, help="path to output data directory")
     parser.add_argument("--data-type", dest="data_type", required=True, choices=["colmap", "polycam"])
     parser.add_argument("--scene-type", dest="scene_type", required=True, choices=["indoor", "object", "unbound"],
@@ -255,8 +263,6 @@ if __name__ == "__main__":
                         help="The bounding box of the scene is firstly calculated by the camera positions, "
                              "then multiply with scene_scale_mult")
 
-    parser.add_argument("--sensor-depth", dest="sensor_depth", action="store_true",
-                        help="Generate sensor depths from polycam.")
     parser.add_argument("--mono-prior", dest="mono_prior", action="store_true",
                         help="Whether to generate mono-prior depths and normals. "
                              "If enabled, the images will be cropped to 384*384")
