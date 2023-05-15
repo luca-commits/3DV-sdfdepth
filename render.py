@@ -212,7 +212,7 @@ class RenderTrajectory:
 
         t_i = (t_1 + t_2)/2
         #change
-        t_i = np.vstack((t_1,t_2))
+        t_i = np.vstack((t_i,t_i))
 
         rotmats_1 = camera_to_worlds_1[:,0:3,0:3]
         rotmats_2 = camera_to_worlds_2[:,0:3,0:3]
