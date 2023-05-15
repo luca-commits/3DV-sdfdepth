@@ -136,7 +136,7 @@ def parse_transform_multicam(basedir, date, drive, start_frame_idx=0, end_frame_
     
     folder_cam3 = f"image_03/data"
     full_cam3_folder_path = os.path.join(save_loc, folder_cam3)
-    all_frames_cam3 = [ path for path in sorted(os.listdir(full_cam2_folder_path)) if '.png' in path ]
+    all_frames_cam3 = [ path for path in sorted(os.listdir(full_cam3_folder_path)) if '.png' in path ]
     
     frame_dicts = []
 
