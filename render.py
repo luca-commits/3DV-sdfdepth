@@ -218,8 +218,8 @@ class RenderTrajectory:
 
         rotmats_i1 = []
         rotmats_i2 = []
-        rotmat_1 = get_rotmat(5)
-        rotmat_2 = get_rotmat(-5)
+        rotmat_out_1 = get_rotmat(0)
+        rotmat_out_2 = get_rotmat(0)
         for i in range (len(rotmats_1)):
             rotmat_1 = rotmats_1[i]
             rotmat_2 = rotmats_2[i]
@@ -230,12 +230,13 @@ class RenderTrajectory:
             rotmat_i = slerp(0.5)
             rotmat_i = rotmat_i.as_matrix()
 
-            rotmat_i1 = np.dot(rotmat_1, rotmat_i)
-            rotmat_i2 = np.dot(rotmat_2, rotmat_i)
+            rotmat_i1 = np.dot(rotmat_out_1, rotmat_i)
+            rotmat_i2 = np.dot(rotmat_out_2, rotmat_i)
 
             rotmats_i1.append(rotmat_i1)
             rotmats_i2.append(rotmat_i2)
         
+        #change
         rotmats_i = np.vstack((rotmats_i1, rotmats_i2))
 
         camera_to_worlds = np.zeros((num_images, 4, 4))
@@ -252,12 +253,12 @@ class RenderTrajectory:
 
         camera_to_worlds = torch.tensor(camera_to_worlds).float()
 
-        # # if self.config.auto_orient:
-        # camera_to_worlds, transform = camera_utils.auto_orient_and_center_poses(
-        #     camera_to_worlds,
-        #     method="up",
-        #     center_poses=False,
-        # )
+        # if self.config.auto_orient:
+        camera_to_worlds, transform = camera_utils.auto_orient_and_center_poses(
+            camera_to_worlds,
+            method="up",
+            center_poses=False,
+        )
 
         # CHANGE THIS!!!!!!
         height, width = 375, 1242#meta["height"], meta["width"]
