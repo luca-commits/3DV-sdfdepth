@@ -95,7 +95,12 @@ def _render_trajectory_video(
                 output_image = outputs[rendered_output_name].cpu().numpy()
                 render_image.append(output_image)
             render_image = np.concatenate(render_image, axis=1)
+            #### stuck here
             if output_format == "images":
+                if rendered_output_names[0] == "depth":
+                    print(render_image.shape)
+                    render_image = np.squeeze(render_image, axis=2)
+                    render_image = (render_image).astype(np.uint16)
                 media.write_image(output_image_dir / f"{camera_idx:05d}.png", render_image)
             else:
                 images.append(render_image)
