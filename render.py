@@ -113,6 +113,7 @@ def _render_trajectory_video(
         idx_images = list(enumerate(images))
         pool_obj = mp.Pool()
         pool_obj.map(save_image, idx_images)
+        pool_obj.close()
         # for image_idx, render_image in enumerate(images):
         #     print(f"saved image {image_idx}")
         #     media.write_image(output_image_dir / f"{image_idx:05d}.png", render_image)
