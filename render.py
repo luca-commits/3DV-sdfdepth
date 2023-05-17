@@ -34,6 +34,7 @@ from nerfstudio.utils.eval_utils import eval_setup
 from nerfstudio.utils.rich_utils import ItersPerSecColumn
 
 import os
+import multiprocessing as mp
 
 CONSOLE = Console(width=120)
 
@@ -96,15 +97,25 @@ def _render_trajectory_video(
                 render_image.append(output_image)
             render_image = np.concatenate(render_image, axis=1)
             #### stuck here
-            if output_format == "images":
-                if rendered_output_names[0] == "depth":
+            if rendered_output_names[0] == "depth":
                     print(render_image.shape)
                     render_image = np.squeeze(render_image, axis=2)
                     render_image = (render_image).astype(np.uint16)
-                media.write_image(output_image_dir / f"{camera_idx:05d}.png", render_image)
-            else:
-                images.append(render_image)
+            images.append(render_image)
+            print(f"rendered image {camera_idx}")
 
+    if output_format == "images":
+        print("saving images")
+        def save_image(idx_image_tuple):
+            idx, image = idx_image_tuple
+            media.write_image(output_image_dir / f"{idx:05d}.png", image)
+            return idx
+        idx_images = list(enumerate(images))
+        pool_obj = mp.Pool()
+        pool_obj.map(save_image, idx_images)
+        # for image_idx, render_image in enumerate(images):
+        #     print(f"saved image {image_idx}")
+        #     media.write_image(output_image_dir / f"{image_idx:05d}.png", render_image)
     if output_format == "video":
         fps = len(images) / seconds
         # make the folder if it doesn't exist
