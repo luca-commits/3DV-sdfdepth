@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH -c 8
-#SBATCH --time=2:00:00
+#SBATCH --time=8:00:00
 #SBATCH --mem-per-cpu=8G
 #SBATCH --gpus=rtx_3090:1
 #SBATCH -A s_stud_infk 
