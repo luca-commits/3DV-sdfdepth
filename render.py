@@ -144,7 +144,7 @@ class RenderTrajectory:
     #  Trajectory to render.
     traj: Literal["spiral", "filename"] = "filename"
     # Scaling factor to apply to the camera image resolution.
-    downscale_factor: int = 1
+    downscale_factor: float = 1
     # Filename of the camera path to render.
     camera_path_filename: Path = Path("camera_path.json")
     # Name of the output file.
