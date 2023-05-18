@@ -15,7 +15,7 @@ import torchvision.transforms as transforms
 def main():
     # torch.autograd.detect_anomaly()
     # load data
-    data_path = f"{os.getcwd()}/../kitti"
+    data_path = "/cluter/project/infk/courses/252-0579-00L/group26/kitti"
 
     mean = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
