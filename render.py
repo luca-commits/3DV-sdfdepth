@@ -78,6 +78,7 @@ def _render_trajectory_video(
         ItersPerSecColumn(suffix="fps"),
         TimeRemainingColumn(elapsed_when_finished=True, compact=True),
     )
+    print("Device:", pipeline.device)
     output_image_dir = output_filename.parent / output_filename.stem
     if output_format == "images":
         output_image_dir.mkdir(parents=True, exist_ok=True)
