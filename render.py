@@ -83,9 +83,12 @@ def _render_trajectory_video(
         output_image_dir.mkdir(parents=True, exist_ok=True)
     with progress:
         for camera_idx in progress.track(range(cameras.size), description=""):
+            print(f"rendering image {camera_idx}", flush=True)
             camera_ray_bundle = cameras.generate_rays(camera_indices=camera_idx)
+            print("generated rays", flush=True)
             with torch.no_grad():
                 outputs = pipeline.model.get_outputs_for_camera_ray_bundle(camera_ray_bundle)
+            print("got outputs", flush=True)
             render_image = []
             for rendered_output_name in rendered_output_names:
                 if rendered_output_name not in outputs:
@@ -102,7 +105,7 @@ def _render_trajectory_video(
                     render_image = np.squeeze(render_image, axis=2)
                     render_image = (render_image).astype(np.uint16)
             images.append(render_image)
-            print(f"rendered image {camera_idx}")
+            print(f"rendered image {camera_idx}", flush=True)
 
     if output_format == "images":
         print("saving images")
