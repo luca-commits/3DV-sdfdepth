@@ -78,18 +78,14 @@ def _render_trajectory_video(
         ItersPerSecColumn(suffix="fps"),
         TimeRemainingColumn(elapsed_when_finished=True, compact=True),
     )
-    print("Device:", pipeline.device)
     output_image_dir = output_filename.parent / output_filename.stem
     if output_format == "images":
         output_image_dir.mkdir(parents=True, exist_ok=True)
     with progress:
         for camera_idx in progress.track(range(cameras.size), description=""):
-            print(f"rendering image {camera_idx}", flush=True)
             camera_ray_bundle = cameras.generate_rays(camera_indices=camera_idx)
-            print("generated rays", flush=True)
             with torch.no_grad():
                 outputs = pipeline.model.get_outputs_for_camera_ray_bundle(camera_ray_bundle)
-            print("got outputs", flush=True)
             render_image = []
             for rendered_output_name in rendered_output_names:
                 if rendered_output_name not in outputs:
@@ -110,17 +106,9 @@ def _render_trajectory_video(
 
     if output_format == "images":
         print("saving images")
-        def save_image(idx_image_tuple):
-            idx, image = idx_image_tuple
-            media.write_image(output_image_dir / f"{idx:05d}.png", image)
-            return idx
-        idx_images = list(enumerate(images))
-        pool_obj = mp.Pool()
-        pool_obj.map(save_image, idx_images)
-        pool_obj.close()
-        # for image_idx, render_image in enumerate(images):
-        #     print(f"saved image {image_idx}")
-        #     media.write_image(output_image_dir / f"{image_idx:05d}.png", render_image)
+        for image_idx, render_image in enumerate(images):
+            media.write_image(output_image_dir / f"{image_idx:05d}.png", render_image)
+            print(f"saved image {image_idx}")
     if output_format == "video":
         fps = len(images) / seconds
         # make the folder if it doesn't exist
