@@ -96,11 +96,14 @@ def _render_trajectory_video(
                 output_image = outputs[rendered_output_name].cpu().numpy()
                 render_image.append(output_image)
             render_image = np.concatenate(render_image, axis=1)
-            #### stuck here
             if rendered_output_names[0] == "depth":
                     print(render_image.shape)
                     render_image = np.squeeze(render_image, axis=2)
+                    print(render_image.min())
+                    print(render_image.max())
                     render_image = (render_image).astype(np.uint16)
+                    print(render_image.min())
+                    print(render_image.max())
             images.append(render_image)
             print(f"rendered image {camera_idx}", flush=True)
 
