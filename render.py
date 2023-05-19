@@ -101,6 +101,7 @@ def _render_trajectory_video(
                     render_image = np.squeeze(render_image, axis=2)
                     print(render_image.min())
                     print(render_image.max())
+                    np.save(output_image_dir + f"/depth{camera_idx}.npy", render_image)
                     render_image = (render_image).astype(np.uint16)
                     print(render_image.min())
                     print(render_image.max())
