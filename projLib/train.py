@@ -53,7 +53,7 @@ def main():
         "batch_size": 32,
         "save_steps": 3,
         "clip": 2.0,
-        "aug_size": train_dataset.aug_len,
+        "aug_size": train_dataset.no_aug_images,
     }
 
     wandb.init(project="3DV_sdfdepth", config=train_args, anonymous="allow")
