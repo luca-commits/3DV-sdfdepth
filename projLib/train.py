@@ -12,10 +12,13 @@ from torchvision.transforms.functional import InterpolationMode
 import wandb
 import torchvision.transforms as transforms
 
+AUG_SIZE = -1
+
 def main():
     # torch.autograd.detect_anomaly()
     # load data
     data_path = "/cluster/project/infk/courses/252-0579-00L/group26/kitti"
+    aug_dir = "/cluster/project/infk/courses/252-0579-00L/group26/renders-all"
 
     mean = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
@@ -30,7 +33,7 @@ def main():
     [transforms.ToTensor(), transforms.Resize([256, 768], InterpolationMode.NEAREST, antialias=False)])
     
     val_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated"), transform=transform, target_transform=target_transform, image_list=val_files) #
-    train_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated"), transform=transform, target_transform=target_transform, image_list=train_files) #
+    train_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated"), transform=transform, target_transform=target_transform, image_list=train_files, aug_dir=aug_dir, aug_len=AUG_SIZE) #
     test_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated"), transform=transform, target_transform=target_transform, image_list=test_files) #
     print(f"train dataset size: {len(train_dataset)}")
     print(f"val dataset size: {len(val_dataset)}")
@@ -49,7 +52,8 @@ def main():
         "verbose": True,
         "batch_size": 32,
         "save_steps": 3,
-        "clip": 2.0
+        "clip": 2.0,
+        "aug_size": train_dataset.aug_len if AUG_SIZE == -1 else AUG_SIZE,
     }
 
     wandb.init(project="3DV_sdfdepth", config=train_args, anonymous="allow")

@@ -4,12 +4,19 @@ from typing import Tuple
 from tqdm import tqdm
 import numpy as np
 
+from random import sample
+from random import seed
+
+seed(42)
+
 from PIL import Image
 
 class MonoDepthDataset(torch.utils.data.Dataset):
     def __init__(self,
                  img_dir: str,
                  target_dir: str = None,
+                 aug_dir: str = None,
+                 aug_len: int = -1,
                  transform: torch.nn.Module = None,
                  target_transform: torch.nn.Module = None,
                  keep_in_memory: bool = False,
@@ -19,6 +26,9 @@ class MonoDepthDataset(torch.utils.data.Dataset):
         self.transform = transform
         self.target_transform = target_transform
         self.keep_in_memory = keep_in_memory
+        self.aug_dir = aug_dir
+        self.aug_len = aug_len
+        self.no_aug_images = 0
         self.image_paths = []
         self.target_paths = []
         self.target_masks = []
@@ -42,6 +52,36 @@ class MonoDepthDataset(torch.utils.data.Dataset):
                                 continue
                         self.target_paths.append(image.path)
                         self.image_paths.append(os.path.join(img_dir, scene_date, scene_name, camera_name, "data", image_name))
+        if self.aug_dir is not None:
+            self.aug_image_paths = []
+            self.aug_target_paths = []
+            scenes = list(os.scandir(self.aug_dir))
+            for scene in scenes:
+                scene_name = os.path.basename(scene)
+                scene_timestamps = list(os.scandir(scene))
+                for timestamp in scene_timestamps:
+                    angles = list(os.scandir(timestamp))
+                    for angle in angles:
+                        modalities = list(os.scandir(angle))
+                        for modality in modalities:
+                            images = list(os.scandir(modality))
+                            if os.path.basename(modality) == "rgb":
+                                for image in images:
+                                    self.no_aug_images += 1
+                                    self.aug_image_paths.append(image.path)
+                            elif os.path.basename(modality) == "depth":
+                                for image in images:
+                                    self.aug_target_paths.append(image.path)
+            if self.aug_len > 0:
+                sampled_augs = sample(list(zip(self.aug_image_paths, self.aug_target_paths)), self.aug_len)
+                sampled_aug_image_paths = [x[0] for x in sampled_augs]
+                sampled_aug_target_paths = [x[1] for x in sampled_augs]
+                self.image_paths = self.image_paths + sampled_aug_image_paths
+                self.target_paths = self.target_paths + sampled_aug_target_paths
+            elif self.aug_len == -1:
+                self.image_paths = self.image_paths + self.aug_image_paths
+                self.target_paths = self.target_paths + self.aug_target_paths
+
         if self.keep_in_memory:
             self.images = []
             self.targets = []
