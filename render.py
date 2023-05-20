@@ -88,14 +88,14 @@ def _render_trajectory_video(
     gt_depth = gt_depth / scene_scale
     gt_depth = gt_depth * 1000
     
-    print("Output depth shape:")
-    print(output_depth.shape)
-    print(output_depth.min())
-    print(output_depth.max())
-    print("GT depth shape:")
-    print(gt_depth.shape)
-    print(gt_depth.min())
-    print(gt_depth.max())
+    # print("Output depth shape:")
+    # print(output_depth.shape)
+    # print(output_depth.min())
+    # print(output_depth.max())
+    # print("GT depth shape:")
+    # print(gt_depth.shape)
+    # print(gt_depth.min())
+    # print(gt_depth.max())
 
     scale, shift = compute_scale_and_shift(output_depth[None, ..., 0], gt_depth[None, ...], gt_depth[None, ...] > 0.0)
     scale, shift = scale.item(), shift.item()
@@ -129,19 +129,19 @@ def _render_trajectory_video(
             render_rgb_image = np.concatenate(render_rgb_image, axis=1)
             render_depth_image = np.concatenate(render_depth_image, axis=1)
             render_depth_image = np.squeeze(render_depth_image, axis=2)
-            print("unmodified depth")
-            print(render_depth_image.min())
-            print(render_depth_image.max())
+            # print("unmodified depth")
+            # print(render_depth_image.min())
+            # print(render_depth_image.max())
             render_depth_image = render_depth_image * scale + shift
             render_depth_image = np.clip(render_depth_image, 0, a_max=65535)
-            print("scale and shift")
-            print(render_depth_image.min())
-            print(render_depth_image.max())
+            # print("scale and shift")
+            # print(render_depth_image.min())
+            # print(render_depth_image.max())
             np.save(f"depth{camera_idx}.npy", render_depth_image)
             render_depth_image = (render_depth_image).astype(np.uint16)
-            print("uint16")
-            print(render_depth_image.min())
-            print(render_depth_image.max())
+            # print("uint16")
+            # print(render_depth_image.min())
+            # print(render_depth_image.max())
             # for rendered_output_name in rendered_output_names:
             #     if rendered_output_name not in outputs:
             #         CONSOLE.rule("Error", style="red")
@@ -168,7 +168,7 @@ def _render_trajectory_video(
             #         print(render_image.max())
             rgb_images.append(render_rgb_image)
             depths.append(render_depth_image)
-            print(f"rendered image {camera_idx}", flush=True)
+            # print(f"rendered image {camera_idx}", flush=True)
 
     if output_format == "images":
         print("saving images")
@@ -248,7 +248,7 @@ class RenderTrajectory:
         f = open(meta_data_path)
   
         meta = json.load(f)
-        print(meta)
+        # print(meta)
 
         fx = []
         fy = []
@@ -268,10 +268,10 @@ class RenderTrajectory:
 
         for i, frame in enumerate(meta["frames"]):
 
-            print()
-            print("frame", i)
-            print(frame)
-            print()
+            # print()
+            # print("frame", i)
+            # print(frame)
+            # print()
             intrinsics = torch.tensor(frame["intrinsics"])
             camtoworld = torch.tensor(frame["camtoworld"])
             
