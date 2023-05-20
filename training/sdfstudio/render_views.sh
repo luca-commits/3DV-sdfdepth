@@ -21,13 +21,5 @@ python ../../render.py \
 --load-config output/${NERF_NAME}/monosdf/${TIMESTAMP}/config.yml \
 --metadata-path /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/datasets_poster/${SCENE_NAME}/meta_data.json \
 --angle ${ANGLE} \
---output-path renders/${SCENE_NAME}/${TIMESTAMP}/rgb_images/${ANGLE}.png \
+--output-path renders/${SCENE_NAME}/${TIMESTAMP}/${ANGLE}.png \
 --downscale-factor 1.44
-
-python ../../render.py \
---load-config output/${NERF_NAME}/monosdf/${TIMESTAMP}/config.yml \
---metadata-path /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/datasets_poster/${SCENE_NAME}/meta_data.json \
---angle ${ANGLE} \
---output-path renders/${SCENE_NAME}/${TIMESTAMP}/depth/${ANGLE}.png \
---downscale-factor 1.44 \
---rendered-output-names depth
