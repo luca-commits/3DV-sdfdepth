@@ -313,7 +313,7 @@ class RenderTrajectory:
         rotmats_i1 = []
         rotmats_i2 = []
         rotmat_out_1 = get_rotmat(angle)
-        rotmat_out_2 = get_rotmat(angle)
+        rotmat_out_2 = get_rotmat(-angle)
         for i in range (len(rotmats_1)):
             rotmat_1 = rotmats_1[i]
             rotmat_2 = rotmats_2[i]
