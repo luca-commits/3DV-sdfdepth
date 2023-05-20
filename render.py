@@ -137,7 +137,7 @@ def _render_trajectory_video(
             # print("scale and shift")
             # print(render_depth_image.min())
             # print(render_depth_image.max())
-            np.save(f"depth{camera_idx}.npy", render_depth_image)
+            # np.save(f"depth{camera_idx}.npy", render_depth_image)
             render_depth_image = (render_depth_image).astype(np.uint16)
             # print("uint16")
             # print(render_depth_image.min())
