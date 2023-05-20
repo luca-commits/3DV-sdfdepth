@@ -64,7 +64,7 @@ class MonoDepthDataset(torch.utils.data.Dataset):
                     for angle in angles:
                         modalities = list(os.scandir(angle))
                         for modality in modalities:
-                            images = list(os.scandir(modality))
+                            images = [f for f in list(os.scandir(modality)) if os.path.isfile(f)]
                             if os.path.basename(modality) == "rgb":
                                 for image in images:
                                     self.no_aug_images += 1
