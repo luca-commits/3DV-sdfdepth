@@ -71,12 +71,12 @@ def main():
     test_results = {f"test/{k}": v for k, v in test_results.items()}
     wandb.log(test_results)
 
-    save_model(results["model"])
+    save_model(results["model"], f"unet_{AUG_SIZE}.pth")
 
-    pretrained_path = f"{os.getcwd()}/pretrained"
+    pretrained_path = f"{os.getcwd()}/pretrained/{AUG_SIZE}"
     results["model"].eval().to("cpu")
     with torch.no_grad():
-        visualise_prediction(train_dataset[0][0], train_dataset[0][1], results["model"](train_dataset[0][0].unsqueeze(0))[0], os.path.join(pretrained_path, "vis.png"))
+        visualise_prediction(torch.stack((test_data_loader.dataset[0][0][0]*std[0]+mean[0],test_data_loader.dataset[0][0][1]*std[1]+mean[1],test_data_loader.dataset[0][0][2]*std[2]+mean[2])), test_data_loader.dataset[0][1], results["model"](val_data_loader.dataset[0][0].unsqueeze(0))[0], os.path.join(pretrained_path, f"vis_test_{AUG_SIZE}.png"))
 
 
 

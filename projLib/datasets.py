@@ -52,7 +52,7 @@ class MonoDepthDataset(torch.utils.data.Dataset):
                                 continue
                         self.target_paths.append(image.path)
                         self.image_paths.append(os.path.join(img_dir, scene_date, scene_name, camera_name, "data", image_name))
-        if self.aug_dir is not None:
+        if self.aug_dir is not None and self.aug_len != 0:
             self.aug_image_paths = []
             self.aug_target_paths = []
             scenes = list(os.scandir(self.aug_dir))
