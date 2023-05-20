@@ -116,7 +116,7 @@ def _render_trajectory_video(
         depth_output_image_dir.mkdir(parents=True, exist_ok=True)
     with progress:
         #CHANGE range
-        for camera_idx in progress.track(range(4), description=""):
+        for camera_idx in progress.track(range(cameras.size), description=""):
             camera_ray_bundle = cameras.generate_rays(camera_indices=camera_idx)
             with torch.no_grad():
                 outputs = pipeline.model.get_outputs_for_camera_ray_bundle(camera_ray_bundle)
