@@ -12,10 +12,15 @@ from torchvision.transforms.functional import InterpolationMode
 import wandb
 import torchvision.transforms as transforms
 
+MODEL_SUFFIX = "augmented"
+AUG_SIZE = -1
+USE_REAL_DATA = True
+
 def main():
     # torch.autograd.detect_anomaly()
     # load data
-    data_path = f"{os.getcwd()}/../kitti"
+    data_path = "/cluster/project/infk/courses/252-0579-00L/group26/kitti"
+    aug_dir = "/cluster/project/infk/courses/252-0579-00L/group26/renders-all"
 
     mean = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
@@ -30,7 +35,7 @@ def main():
     [transforms.ToTensor(), transforms.Resize([256, 768], InterpolationMode.NEAREST, antialias=False)])
     
     val_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated"), transform=transform, target_transform=target_transform, image_list=val_files) #
-    train_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated"), transform=transform, target_transform=target_transform, image_list=train_files) #
+    train_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated"), transform=transform, target_transform=target_transform, image_list=train_files, aug_dir=aug_dir, aug_len=AUG_SIZE, use_real_data=USE_REAL_DATA) #
     test_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated"), transform=transform, target_transform=target_transform, image_list=test_files) #
     print(f"train dataset size: {len(train_dataset)}")
     print(f"val dataset size: {len(val_dataset)}")
@@ -42,14 +47,15 @@ def main():
     print(f"device:{device}")
 
     train_args = {
-        "epochs": 20,
+        "epochs": 60,
         "device": device,
         "scheduler": "LinearLR",
         "optimizer_args": { "lr": 0.0005},
         "verbose": True,
         "batch_size": 32,
         "save_steps": 3,
-        "clip": 2.0
+        "clip": 2.0,
+        "aug_size": train_dataset.no_aug_images,
     }
 
     wandb.init(project="3DV_sdfdepth", config=train_args, anonymous="allow")
@@ -67,12 +73,14 @@ def main():
     test_results = {f"test/{k}": v for k, v in test_results.items()}
     wandb.log(test_results)
 
-    save_model(results["model"])
+    save_model(results["model"], f"unet_{MODEL_SUFFIX}_{AUG_SIZE}.pth")
 
-    pretrained_path = f"{os.getcwd()}/pretrained"
+    pretrained_path = f"{os.getcwd()}/pretrained/{MODEL_SUFFIX}_{AUG_SIZE}"
+    if not os.path.exists(pretrained_path):
+        os.makedirs(pretrained_path, exist_ok=True, parents=True)
     results["model"].eval().to("cpu")
     with torch.no_grad():
-        visualise_prediction(train_dataset[0][0], train_dataset[0][1], results["model"](train_dataset[0][0].unsqueeze(0))[0], os.path.join(pretrained_path, "vis.png"))
+        visualise_prediction(torch.stack((test_data_loader.dataset[0][0][0]*std[0]+mean[0],test_data_loader.dataset[0][0][1]*std[1]+mean[1],test_data_loader.dataset[0][0][2]*std[2]+mean[2])), test_data_loader.dataset[0][1], results["model"](val_data_loader.dataset[0][0].unsqueeze(0))[0], os.path.join(pretrained_path, f"vis_test_{AUG_SIZE}.png"))
 
 
 
