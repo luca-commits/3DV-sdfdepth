@@ -14,6 +14,7 @@ import torchvision.transforms as transforms
 
 MODEL_SUFFIX = "augmented"
 AUG_SIZE = -1
+USE_REAL_DATA = True
 
 def main():
     # torch.autograd.detect_anomaly()
@@ -34,7 +35,7 @@ def main():
     [transforms.ToTensor(), transforms.Resize([256, 768], InterpolationMode.NEAREST, antialias=False)])
     
     val_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated"), transform=transform, target_transform=target_transform, image_list=val_files) #
-    train_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated"), transform=transform, target_transform=target_transform, image_list=train_files, aug_dir=aug_dir, aug_len=AUG_SIZE) #
+    train_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated"), transform=transform, target_transform=target_transform, image_list=train_files, aug_dir=aug_dir, aug_len=AUG_SIZE, use_real_data=USE_REAL_DATA) #
     test_dataset = MonoDepthDataset(img_dir=os.path.join(data_path, "rgb_images"), target_dir=os.path.join(data_path, "depth/data_depth_annotated"), transform=transform, target_transform=target_transform, image_list=test_files) #
     print(f"train dataset size: {len(train_dataset)}")
     print(f"val dataset size: {len(val_dataset)}")
@@ -46,7 +47,7 @@ def main():
     print(f"device:{device}")
 
     train_args = {
-        "epochs": 20,
+        "epochs": 60,
         "device": device,
         "scheduler": "LinearLR",
         "optimizer_args": { "lr": 0.0005},
