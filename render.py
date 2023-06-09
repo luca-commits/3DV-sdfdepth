@@ -85,8 +85,8 @@ def _render_trajectory_video(
     # output_depth = output_depth.squeeze(2)
     reference_crop = transforms.CenterCrop((output_depth.shape[0], output_depth.shape[1]))
     gt_depth = reference_crop(gt_depth)
-    gt_depth = gt_depth / scene_scale
-    gt_depth = gt_depth * 1000
+    # gt_depth = gt_depth / scene_scale
+    # gt_depth = gt_depth * 1000
     
     # print("Output depth shape:")
     # print(output_depth.shape)
