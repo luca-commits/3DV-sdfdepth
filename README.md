@@ -110,7 +110,7 @@ To train the scene representation model, edit the `training/sdfstudio/submit_tra
 
 - `SCENE_NAME`: name of the scene (see example in the script)
 - `VENV_PATH`: path to your virtual environment
-- `SCENE_DATASETS_DIR`: directory where the generated scene datasets are be stored
+- `SCENE_DATASETS_DIR`: directory where the generated scene datasets are stored
 
 The output of this phase of the pipeline are the trained scene representation models, which will be present in the `training/sdfstudio/output` directory.
 
@@ -125,7 +125,7 @@ To render novel views, edit the `training/sdfstudio/render_views.sh` file and ch
 - `TIMESTAMP`: timestamp of the MonoSDF model
 - `ANGLE`: angle by which the novel views will be rotated around the Z axis
 - `VENV_PATH`: path to your virtual environment
-- `SCENE_DATASETS_DIR`: directory where the generated scene datasets are be stored
+- `SCENE_DATASETS_DIR`: directory where the generated scene datasets are stored
 
 (hint: the `NERF_NAME` and `TIMESTAMP` can be found in the path to your saved model in the outputs folder, an example is given by the default values in the `render_views.sh` script)
 
