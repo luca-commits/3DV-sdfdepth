@@ -155,6 +155,10 @@ Repositories whose code is adapted in this repository are:
 - AdaBins, version 1.0, https://github.com/shariqfarooq123/AdaBins
 - UNet/FCN Pytorch, version 2022.08.21, https://github.com/usuyama/pytorch-unet
 
+## Sample data
+
+A sample of the data used is present in the `sample` directory. It includes the KITTI raw image data and the corresponding depth information.
+
 ## Authors
 
 Niall Siegenheim, Luca Wolfart, Lovro Rabuzin, Mert Ertugrul
