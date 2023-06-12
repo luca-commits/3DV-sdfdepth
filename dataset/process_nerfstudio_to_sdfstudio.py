@@ -100,8 +100,18 @@ def main(args):
         scale_mat[:3] *= scene_scale
         scale_mat = np.linalg.inv(scale_mat)
     else:
-        scene_scale = 1.0
+        scene_scale = 2.0 / np.maximum(np.max(max_vertices - min_vertices) * 1.5, 100.)
+        scene_center = (min_vertices + max_vertices) / 2.0
+        poses[:, :3, 3] -= scene_center
+        poses[:, :3, 3] *= scene_scale
+        # calculate scale matrix
         scale_mat = np.eye(4).astype(np.float32)
+        scale_mat[:3, 3] -= scene_center
+        scale_mat[:3] *= scene_scale
+        scale_mat = np.linalg.inv(scale_mat)
+        scale_mat = np.eye(4).astype(np.float32)
+
+    print("Scene scale: ", scene_scale)
 
     # === Construct the scene box ===
     if args.scene_type == "indoor":
@@ -124,10 +134,10 @@ def main(args):
         # TODO: case-by-case near far based on depth prior
         #  such as colmap sparse points or sensor depths
         scene_box = {
-            "aabb": [min_vertices.tolist(), max_vertices.tolist()],
-            "near": 0.05,
-            "far": 2.5 * np.max(max_vertices - min_vertices),
-            "radius": np.min(max_vertices - min_vertices) / 2.0,
+            "aabb": [[-1, -1, -1], [1, 1, 1]],
+            "near": 0.1 * scene_scale,
+            "far": 25. * scene_scale,
+            "radius": 1.0,
             "collider_type": "box",
         }
 
@@ -172,12 +182,15 @@ def main(args):
         if not valid:
             continue
 
-        # save rgb image
         out_img_path = output_dir / f"{out_index:06d}_rgb.png"
-        img = Image.open(image_path)
-        img_tensor = rgb_trans(img)
-        img_tensor.save(out_img_path)
         rgb_path = str(out_img_path.relative_to(output_dir))
+        
+        if not args.dry_run:
+            # save rgb image
+            img = Image.open(image_path)
+            img_tensor = rgb_trans(img)
+            img_tensor.save(out_img_path)
+            
 
         frame = {
             "rgb_path": rgb_path,
@@ -188,15 +201,15 @@ def main(args):
         if args.mono_prior:
             frame["mono_depth_path"] = rgb_path.replace("_rgb.png", "_depth.npy")
 
-            if depth_dir is not None:
+            if depth_dir is not None and not args.dry_run:
                 depth_path = depth_paths[idx]
                 out_depth_path = output_dir / f"{out_index:06d}_depth.png"
-                depth = cv2.imread(str(depth_path), -1).astype(np.float32) / 1000.0
+                depth = cv2.imread(str(depth_path), -1).astype(np.float32)
                 depth_PIL = Image.fromarray(depth)
                 new_depth = depth_trans(depth_PIL)
                 new_depth = np.asarray(new_depth)
                 # scale depth as we normalize the scene to unit box
-                new_depth = np.copy(new_depth) * scene_scale
+                new_depth = np.copy(new_depth)
                 plt.imsave(out_depth_path, new_depth, cmap="viridis")
                 np.save(str(out_depth_path).replace(".png", ".npy"), new_depth)
 
@@ -222,7 +235,7 @@ def main(args):
         json.dump(meta_data, f, indent=4)
 
     # === Generate mono priors using omnidata ===
-    if args.mono_prior:
+    if args.mono_prior and not args.dry_run:
         assert os.path.exists(args.pretrained_models), "Pretrained model path not found"
         assert os.path.exists(args.omnidata_path), "omnidata l path not found"
         # generate mono depth and normal
@@ -230,7 +243,6 @@ def main(args):
         if depth_dir is None:
             print("Generating mono depth...")
             os.system(
-                #f"python scripts/datasets/extract_monocular_cues.py \
                 f"python extract_monocular_cues.py \
                 --omnidata_path {args.omnidata_path} \
                 --pretrained_model {args.pretrained_models} \
@@ -242,14 +254,13 @@ def main(args):
         
         print("Generating mono normal...")
         os.system(
-            #f"python scripts/datasets/extract_monocular_cues.py \
             f"python extract_monocular_cues.py \
             --omnidata_path {args.omnidata_path} \
             --pretrained_model {args.pretrained_models} \
             --img_path {output_dir} --output_path {output_dir} \
             --task normal"
         )
-
+  
     print(f"Done! The processed data has been saved in {output_dir}")
 
 
@@ -278,6 +289,7 @@ if __name__ == "__main__":
     parser.add_argument("--pretrained-models", dest="pretrained_models",
                         default="<YOUR_DIR>/omnidata_tools/torch/pretrained_models/",
                         help="path to pretrained models")
+    parser.add_argument("--dry-run", dest="dry_run", action="store_true")
 
     args = parser.parse_args()
 
