@@ -24,8 +24,6 @@ This code repository contains source code developed for the purposes of the proj
     * `submit_training.sh` - script for invoking the training of a MonoSDF model for a particular scene
     * `render_views.sh` - script for invoking the rendering of a scene for which a MonoSDF model was trained
 
-*** 
-
 ## Running the code
 
 The steps outlined for running the code all assume execution on the ETH Euler cluster.
@@ -141,8 +139,6 @@ To train the monocular depth prediction model using the ground truth and novel v
     - aug-dir: Path to the directory containing novel views 
 
 The training script uses Weights and Biases to track experiments and log validation and testing results. If you want to have access to the outputs, make sure you are logged in to Weights and Biases before running the training script.
-
-***
 
 ## External libraries
 
