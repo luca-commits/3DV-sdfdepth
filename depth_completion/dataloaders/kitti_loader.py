@@ -33,14 +33,10 @@ def get_paths_and_transform(split, args):
             'data_depth_annotated/train/*_sync/proj_depth/groundtruth/image_0[2,3]/*.png'
         )
 
-
-
         def get_rgb_paths(p):
             ps = p.split('/')
             date_liststr = []
             date_liststr.append(ps[-5][:10])
-            # pnew = '/'.join([args.data_folder] + ['data_rgb'] + ps[-6:-4] +
-            #                ps[-2:-1] + ['data'] + ps[-1:])
             pnew = '/'.join(date_liststr + ps[-5:-4] + ps[-2:-1] + ['data'] + ps[-1:])
             pnew = os.path.join(args.data_folder_rgb, pnew)
             return pnew
@@ -49,8 +45,6 @@ def get_paths_and_transform(split, args):
             ps = p.split('/')
             date_liststr = []
             date_liststr.append(ps[-5][:10])
-            # pnew = '/'.join([args.data_folder] + ['data_rgb'] + ps[-6:-4] +
-            #                ps[-2:-1] + ['data'] + ps[-1:])
             pnew = '/'.join(date_liststr + ps[-5:-4] + ps[-2:-1] + ['data'] + ps[-1:])
             pnew = os.path.join(args.data_semantic, pnew)
             return pnew
@@ -70,8 +64,6 @@ def get_paths_and_transform(split, args):
                 ps = p.split('/')
                 date_liststr = []
                 date_liststr.append(ps[-5][:10])
-                # pnew = '/'.join(ps[:-7] +
-                #   ['data_rgb']+ps[-6:-4]+ps[-2:-1]+['data']+ps[-1:])
                 pnew = '/'.join(date_liststr + ps[-5:-4] + ps[-2:-1] + ['data'] + ps[-1:])
                 pnew = os.path.join(args.data_folder_rgb, pnew)
                 return pnew
@@ -80,15 +72,11 @@ def get_paths_and_transform(split, args):
                 ps = p.split('/')
                 date_liststr = []
                 date_liststr.append(ps[-5][:10])
-                # pnew = '/'.join(ps[:-7] +
-                #   ['data_rgb']+ps[-6:-4]+ps[-2:-1]+['data']+ps[-1:])
                 pnew = '/'.join(date_liststr + ps[-5:-4] + ps[-2:-1] + ['data'] + ps[-1:])
                 pnew = os.path.join(args.data_semantic, pnew)
                 return pnew
 
-
         elif args.val == "select":
-            # transform = no_transform
             transform = val_transform
             glob_d = os.path.join(
                 args.data_folder,
@@ -114,7 +102,7 @@ def get_paths_and_transform(split, args):
             args.data_folder,
             "test_depth_completion_anonymous/velodyne_raw/*.png"
         )
-        glob_gt = None  # "test_depth_completion_anonymous/"
+        glob_gt = None
         glob_rgb = os.path.join(
             args.data_folder,
             "test_depth_completion_anonymous/image/*.png")
@@ -125,7 +113,7 @@ def get_paths_and_transform(split, args):
     elif split == "test_prediction":
         transform = no_transform
         glob_d = None
-        glob_gt = None  # "test_depth_completion_anonymous/"
+        glob_gt = None
         glob_rgb = os.path.join(
             args.data_folder,
             "data_depth_selection/test_depth_prediction_anonymous/image/*.png")
@@ -136,20 +124,18 @@ def get_paths_and_transform(split, args):
         raise ValueError("Unrecognized split " + str(split))
 
     if glob_gt is not None:
-        # train or val-full or val-select
         paths_d = sorted(glob.glob(glob_d))
         paths_gt = sorted(glob.glob(glob_gt))
         paths_rgb = [get_rgb_paths(p) for p in paths_gt]
         paths_semantic = [get_semantic_paths(p) for p in paths_gt]
 
     else:
-        # test only has d or rgb
         paths_rgb = sorted(glob.glob(glob_rgb))
         paths_semantic = sorted(glob.glob(glob_semantic))
         paths_gt = [None] * len(paths_rgb)
         if split == "test_prediction":
             paths_d = [None] * len(
-                paths_rgb)  # test_prediction has no sparse depth
+                paths_rgb)
         else:
             paths_d = sorted(glob.glob(glob_d))
 
@@ -163,12 +149,6 @@ def get_paths_and_transform(split, args):
         raise (RuntimeError("Requested gray images but no rgb was found"))
     if len(paths_rgb) != len(paths_d) or len(paths_rgb) != len(paths_gt):
         print(len(paths_rgb), len(paths_d), len(paths_gt))
-        # for i in range(999):
-        #    print("#####")
-        #    print(paths_rgb[i])
-        #    print(paths_d[i])
-        #    print(paths_gt[i])
-        # raise (RuntimeError("Produced different sizes for datasets"))
     paths = {"rgb": paths_rgb,"semantic" : paths_semantic, "d": paths_d, "gt": paths_gt}
     
     return paths, transform
@@ -177,16 +157,14 @@ def get_paths_and_transform(split, args):
 def rgb_read(filename):
     assert os.path.exists(filename), "file not found: {}".format(filename)
     img_file = Image.open(filename)
-    # rgb_png = np.array(img_file, dtype=float) / 255.0 # scale pixels to the range [0,1]
-    rgb_png = np.array(img_file, dtype='uint8')  # in the range [0,255]
+    rgb_png = np.array(img_file, dtype='uint8')
     img_file.close()
     return rgb_png
 
 def semantic_read(filename):
     assert os.path.exists(filename), "file not found: {}".format(filename)
     img_file = Image.open(filename).convert("RGB")
-    # rgb_png = np.array(img_file, dtype=float) / 255.0 # scale pixels to the range [0,1]
-    semantic_png = np.array(img_file, dtype='uint8')  # in the range [0,255]
+    semantic_png = np.array(img_file, dtype='uint8')
     img_file.close()
     return semantic_png
 
@@ -206,7 +184,6 @@ def depth_read(filename):
         "np.max(depth_png)={}, path={}".format(np.max(depth_png), filename)
 
     depth = depth_png.astype(np.float) / 256.
-    # depth[depth_png == 0] = -1.
     depth = np.expand_dims(depth, -1)
     return depth
 
@@ -216,8 +193,6 @@ def drop_depth_measurements(depth, prob_keep):
     return depth
 
 def train_transform(rgb, semantic,sparse, target, position, args):
-    # s = np.random.uniform(1.0, 1.5) # random scaling
-    # angle = np.random.uniform(-5.0, 5.0) # random rotation degrees
     oheight = args.val_h
     owidth = args.val_w
 
@@ -248,21 +223,16 @@ def train_transform(rgb, semantic,sparse, target, position, args):
 
     if semantic is not None:
         semantic = transform_geometric(semantic)
-    # sparse = drop_depth_measurements(sparse, 0.9)
-
     if position is not None:
         bottom_crop_only = transforms.Compose([transforms.BottomCrop((oheight, owidth))])
         position = bottom_crop_only(position)
 
 
-    # random crop
-    #if small_training == True:
     if args.not_random_crop == False:
         h = oheight
         w = owidth
         rheight = args.random_crop_height
         rwidth = args.random_crop_width
-        # randomlize
         i = np.random.randint(0, h - rheight + 1)
         j = np.random.randint(0, w - rwidth + 1)
 

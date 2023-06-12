@@ -14,9 +14,10 @@ IMAGE_DIR=/cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/images
 COMPLETED_DEPTH_DIR=/cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/completed_depth
 OMNIDATA_PATH=/cluster/project/infk/courses/252-0579-00L/group26/omnidata/omnidata_tools/torch/
 PRETRAINED_OMNIDATA_MODELS=/cluster/project/infk/courses/252-0579-00L/group26/omnidata/omnidata_tools/pretrained_models/
+VENV_PATH=/cluster/project/infk/courses/252-0579-00L/group26/sdfstudio/venv/bin/activate
 
 module load gcc/8.2.0 cuda/11.6.2 python/3.8.5 intel-tbb/2020.3 eth_proxy
-source /cluster/project/infk/courses/252-0579-00L/group26/sdfstudio/venv/bin/activate
+source ${VENV_PATH}
 
 python process_data.py --output-dir ${OUTPUT_DIR} \
 --kitti-rgb ${KITTI_RGB} \

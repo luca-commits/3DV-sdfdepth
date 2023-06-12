@@ -24,6 +24,8 @@ This code repository contains source code developed for the purposes of the proj
     * `submit_training.sh` - script for invoking the training of a MonoSDF model for a particular scene
     * `render_views.sh` - script for invoking the rendering of a scene for which a MonoSDF model was trained
 
+*** 
+
 ## Running the code
 
 The steps outlined for running the code all assume execution on the ETH Euler cluster.
@@ -56,6 +58,10 @@ pip install python-snappy cryptography # some missing packages
 ```
 The execution of the previous code block takes around an hour.
 
+### 1. Install requirements
+
+Install requirements listed in the `requirements.txt` file.
+
 ### 2. Install Omnidata
 
 To be able to train the MonoSDF model, for each image in the KITTI dataset, we need corresponding surface normal maps. Since the surface normal maps themselves aren't part of the KITTI datasets, generating normal maps relies on the omnidata model.
@@ -86,12 +92,13 @@ The MonoSDF model used requires complete depth maps, but the ground truth depth 
 
 Define which KITTI scenes you want to train scene representation models by listing them in the `train_syncs.txt` file. To run the generation code, in the `submit_preprocessing.sh` script, change the following constants:
 
- - OUTPUT_DIR: directory where the generated scene datasets will be stored
- - KITTI_RGB: path to KITTI RGB images
- - IMAGE_DIR: directory which will be used to store intermediate dataset files
- - COMPLETED_DEPTH_DIR: directory containing completed depths (output of previous step)
- - OMNIDATA_PATH: path to the downloaded Omnidata repository
- - PRETRAINED_OMNIDATA_MODELS: path to directory containing pretrained Omnidata models
+ - `OUTPUT_DIR`: directory where the generated scene datasets will be stored
+ - `KITTI_RGB`: path to KITTI RGB images
+ - `IMAGE_DIR`: directory which will be used to store intermediate dataset files
+ - `COMPLETED_DEPTH_DIR`: directory containing completed depths (output of previous step)
+ - `OMNIDATA_PATH`: path to the downloaded Omnidata repository
+ - `PRETRAINED_OMNIDATA_MODELS`: path to directory containing pretrained Omnidata models
+ - `VENV_PATH`: path to your virtual environment
 
 After editing the constants, start the `submit_preprocessing.sh` script.
 
@@ -101,7 +108,11 @@ The scenes will be split into sections of 100 frames and each 100 frame section 
 
 Once you have generated the scene dataset following the instructions oulined above, you are ready to start training the scene representation model (MonoSDF).
 
-To train the scene representation model, edit the `training/sdfstudio/submit_training.sh` file and change the `SCENE_NAME` variable to the scene that you want to train the representation of. If needed, also change the path to the data.
+To train the scene representation model, edit the `training/sdfstudio/submit_training.sh` file and change the following constants to the desired values:
+
+- `SCENE_NAME`: name of the scene (see example in the script)
+- `VENV_PATH`: path to your virtual environment
+- `SCENE_DATASETS_DIR`: directory where the generated scene datasets are be stored
 
 The output of this phase of the pipeline are the trained scene representation models, which will be present in the `training/sdfstudio/output` directory.
 
@@ -109,7 +120,16 @@ The output of this phase of the pipeline are the trained scene representation mo
 
 Once you have trained the scene representation model, to render novel views for a particular scene, you are ready to render the novel views of that scene.
 
-To render novel views, edit the `training/sdfstudio/render_views.sh` file and change the `SCENE_NAME`, `NERF_NAME`, `TIMESTAMP` and `ANGLE` variables to the desired values. (hint: the `NERF_NAME` and `TIMESTAMP` can be found in the path to your saved model in the outputs folder, an example is given by the default values in the `render_views.sh` script)
+To render novel views, edit the `training/sdfstudio/render_views.sh` file and change the following constants to the desired values:
+
+- `SCENE_NAME`: name of the scene (see example in the script)
+- `MONOSDF_NAME`: name of the MonoSDF model (see example in the script)
+- `TIMESTAMP`: timestamp of the MonoSDF model
+- `ANGLE`: angle by which the novel views will be rotated around the Z axis
+- `VENV_PATH`: path to your virtual environment
+- `SCENE_DATASETS_DIR`: directory where the generated scene datasets are be stored
+
+(hint: the `NERF_NAME` and `TIMESTAMP` can be found in the path to your saved model in the outputs folder, an example is given by the default values in the `render_views.sh` script)
 
 The rendered scenes will be present in the `training/sdfstudio/renders` directory.
 
@@ -120,7 +140,20 @@ To train the monocular depth prediction model using the ground truth and novel v
     - data-path: Path to the ground truth KITTI data
     - aug-dir: Path to the directory containing novel views 
 
-The training scripts use Weights and Biases to track experiments and log validation and testing results. If you want to have access to the outputs, make sure you are logged in to Weights and Biases before running the training script.
+The training script uses Weights and Biases to track experiments and log validation and testing results. If you want to have access to the outputs, make sure you are logged in to Weights and Biases before running the training script.
+
+***
+
+## External libraries
+
+The majority of libraries used for the development of this project are listed in the `requirements.txt` file.
+
+Repositories whose code is adapted in this repository are:
+- SDF Studio, version 2023.03.12, https://github.com/autonomousvision/sdfstudio
+- Omnidata, version Aug 2022, https://github.com/EPFL-VILAB/omnidata
+- SemAttNet, version Oct 2022, https://github.com/danishnazir/SemAttNet
+- AdaBins, version 1.0, https://github.com/shariqfarooq123/AdaBins
+- UNet/FCN Pytorch, version 2022.08.21, https://github.com/usuyama/pytorch-unet
 
 ## Authors
 

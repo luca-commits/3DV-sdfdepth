@@ -12,10 +12,12 @@
 
 
 SCENE_NAME=2011_09_26_drive_0001_sync_0
+VENV_PATH=/cluster/project/infk/courses/252-0579-00L/group26/sdfstudio/venv/bin/activate
+SCENE_DATASETS_DIR=/cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/datasets_poster
 
 module purge
 module load gcc/8.2.0 cuda/11.6.2 python/3.8.5 intel-tbb/2020.3 eth_proxy
-source /cluster/project/infk/courses/252-0579-00L/group26/sdfstudio/venv/bin/activate
+source ${VENV_PATH}
 
 hostname -i
 ns-train monosdf \
@@ -31,6 +33,6 @@ ns-train monosdf \
 --vis wandb \
 --experiment-name paper-${SCENE_NAME}-$(date +%F_%T) \
 sdfstudio-data \
---data /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/datasets_paper/${SCENE_NAME} \
+--data ${SCENE_DATASETS_DIR}/${SCENE_NAME} \
 --auto-orient True \
 --include-mono-prior True

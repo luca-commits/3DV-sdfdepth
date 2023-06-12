@@ -139,7 +139,6 @@ def save_outputs(img_path, output_file_name):
     save_path = os.path.join(args.output_path, output_file_name.replace("_rgb", f"_{args.task}") + ".png")
     img = Image.open(img_path)
 
-    # --- NEW -----------------------------
     # How much two crops should overlap to do least squares fitting
     overlap = 120
 
@@ -220,12 +219,12 @@ def save_outputs(img_path, output_file_name):
         output_smoothed[:, left_align_r:left_align_l + c] = (1. - weights) * output_adjusted[i-1][:, c-true_overlap:] \
                                                           + weights * output_adjusted[i][:, :true_overlap]
 
-    # Smoothing has messed up unit vectors, renormalize
+    # Smoothing has wrong unit vectors, renormalize
     if args.task == 'normal':
         output_smoothed /= torch.linalg.vector_norm(output_smoothed, dim=-1).unsqueeze(-1)
     # Now we have merged image ------------------------------------
 
-    if args.task == "depth": ## This will not work anymore --
+    if args.task == "depth":
         output_smoothed = output_smoothed.clamp(0, 1).squeeze()
 
         np.save(save_path.replace(".png", ".npy"), output_smoothed.detach().cpu().numpy())

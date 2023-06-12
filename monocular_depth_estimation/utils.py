@@ -9,13 +9,11 @@ from math import sqrt
 import os
 import wandb
 import numpy as np
+from loss import SILogLoss
+import matplotlib.pyplot as plt
 
 mean = [0.485, 0.456, 0.406]
 std = [0.229, 0.224, 0.225]
-
-from loss import SILogLoss
-
-import matplotlib.pyplot as plt
 
 class RunningAverage:
     def __init__(self):
@@ -109,9 +107,7 @@ def visualise_prediction(image, gt_depth, predicted_depth, save_location) -> Non
         fig.colorbar(im, cax = cbar_ax)
         fig.savefig(save_location, dpi=600)
 
-
 def validate(model, valloader, train_args):
-
     device = train_args["device"]
     model.to(device, non_blocking=True)
     model.eval()
@@ -122,7 +118,6 @@ def validate(model, valloader, train_args):
     metrics = RunningAverageDict()
 
     for i, (input, target, mask) in enumerate(valloader, 0):
-
         input, target = input.to(device, non_blocking=True), target.to(device, non_blocking=True)
         with torch.no_grad():
             with torch.autocast(device_type=str(device)):
@@ -135,7 +130,6 @@ def validate(model, valloader, train_args):
             
 
 def train(model, trainloader, valloader, train_args):
-    
     device = train_args["device"]
     model.to(device, non_blocking=True)
 
@@ -164,14 +158,9 @@ def train(model, trainloader, valloader, train_args):
             # forward + backward + optimize
             with torch.autocast(device_type=str(device)):
                 outputs = model(input)
-                # print("outputs")
-                # print(outputs)
                 loss = criterion(outputs, target, mask, False)
-                # print(loss)
             wandb.log({"training batch loss": loss})
             loss.backward()
-
-            # torch.nn.utils.clip_grad_norm_(model.parameters(), train_args["clip"])
 
             optimizer.step()
 

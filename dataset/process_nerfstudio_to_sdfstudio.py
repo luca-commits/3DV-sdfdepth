@@ -1,3 +1,5 @@
+# Code adapted from
+# https://github.com/autonomousvision/sdfstudio/blob/master/scripts/datasets/process_nerfstudio_to_sdfstudio.py
 import argparse
 import json
 import os
@@ -9,7 +11,6 @@ import PIL
 from PIL import Image
 from torchvision import transforms
 from tqdm import tqdm
-
 
 def main(args):
     """
@@ -35,7 +36,6 @@ def main(args):
     image_paths = []
     depth_paths = []
     # only load images with corresponding pose info
-    # currently in random order??, probably need to sort
     for frame in frames:
         # load intrinsics from polycam
         if args.data_type == "polycam":
@@ -43,11 +43,6 @@ def main(args):
                 [frame["fl_x"], 0, frame["cx"]],
                 [0, frame["fl_y"], frame["cy"]],
                 [0, 0, 1]]))
-
-        # load poses
-        # OpenGL/Blender convention, needs to change to COLMAP/OpenCV convention
-        # https://docs.nerf.studio/en/latest/quickstart/data_conventions.html
-        # IGNORED for now
 
         # load images
         file_path = Path(frame["file_path"])
@@ -86,7 +81,6 @@ def main(args):
     # === Normalize the scene ===
     if args.scene_type in ["indoor", "object"]:
         # Enlarge bbox by 1.05 for object scene and by 5.0 for indoor scene
-        # TODO: Adaptively estimate `scene_scale_mult` based on depth-map or point-cloud prior
         if not args.scene_scale_mult:
             args.scene_scale_mult = 1.05 if args.scene_type == "object" else 5.0
         scene_scale = 2.0 / (np.max(max_vertices - min_vertices) * args.scene_scale_mult)
@@ -131,8 +125,6 @@ def main(args):
             "collider_type": "near_far",
         }
     elif args.scene_type == "unbound":
-        # TODO: case-by-case near far based on depth prior
-        #  such as colmap sparse points or sensor depths
         scene_box = {
             "aabb": [[-1, -1, -1], [1, 1, 1]],
             "near": 0.1 * scene_scale,
@@ -148,7 +140,6 @@ def main(args):
     if args.mono_prior:
         # get smallest side to generate square crop
         target_crop = min(h, w)
-        #tar_h = tar_w = 384 * args.crop_mult
         tar_h = 384
         tar_w = w * tar_h // h
 

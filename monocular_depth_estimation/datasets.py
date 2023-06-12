@@ -41,7 +41,6 @@ class MonoDepthDataset(torch.utils.data.Dataset):
                 for folder in data_folders: # 
                     scene_name = os.path.basename(folder)
                     scene_date = "_".join(scene_name.split("_")[:3])
-                    # if (scene_name in  ["2011_09_26_drive_0001_sync", "2011_09_26_drive_0002_sync"]): #####
                     camera_folders = list(os.scandir(os.path.join(folder, "proj_depth", "groundtruth")))
                     for camera_folder in camera_folders:
                         camera_name = os.path.basename(camera_folder)

@@ -373,10 +373,6 @@ class CenterCrop(object):
         i = int(round((h - th) / 2.))
         j = int(round((w - tw) / 2.))
 
-        # # randomized cropping
-        # i = np.random.randint(i-3, i+4)
-        # j = np.random.randint(j-3, j+4)
-
         return i, j, th, tw
 
     def __call__(self, img):
@@ -436,10 +432,6 @@ class BottomCrop(object):
         th, tw = output_size
         i = h - th
         j = int(round((w - tw) / 2.))
-
-        # randomized left and right cropping
-        # i = np.random.randint(i-3, i+4)
-        # j = np.random.randint(j-1, j+1)
 
         return i, j, th, tw
 

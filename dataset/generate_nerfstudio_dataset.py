@@ -1,11 +1,10 @@
 import os
-
 import numpy as np
 import json
 import pykitti
-
 import argparse
 
+# Rotation matrix from KITTI to NERF studio coordinate system
 rotmat = np.transpose(np.array([[-1, 0, 0, 0],
                                 [0, 1, 0, 0],
                                 [0, 0, 1, 0],
@@ -25,9 +24,7 @@ def get_frame_dict_single_cam(file_path, data,i, camera):
             "transform_matrix": [ list(transform_matrix[i]) for i in range(4)]
         }
 
-
 def get_frame_dict_cam3(file_path, data,i, cam3_intrinsics):
-
     transform_matrix = rotmat.dot(data.oxts[i].T_w_imu.dot(np.linalg.inv(data.calib.T_cam3_imu)))
     transform_matrix[0:3, 1:3] *= -1
 
@@ -36,12 +33,8 @@ def get_frame_dict_cam3(file_path, data,i, cam3_intrinsics):
             "transform_matrix": [ list(transform_matrix[i]) for i in range(4)]
     }
 
-
-
 def parse_transform(basedir, date, drive, camera, start_frame_idx=0, end_frame_idx=None, stride=None):
-
     data = pykitti.raw(basedir, date, drive)
-
 
     folder = f'{basedir}/{date}'
     cam = folder + '/calib_cam_to_cam.txt'
@@ -89,7 +82,6 @@ def parse_transform(basedir, date, drive, camera, start_frame_idx=0, end_frame_i
 
 
 def parse_transform_multicam(basedir, date, drive, start_frame_idx=0, end_frame_idx=None, stride=None):
-
     data = pykitti.raw(basedir, date, drive)
 
     folder = f'{basedir}/{date}'
@@ -98,24 +90,19 @@ def parse_transform_multicam(basedir, date, drive, start_frame_idx=0, end_frame_
     with open(cam) as file:
         lines = [line.rstrip() for line in file]
 
-
     all_calibs = {line.split()[0][:-1]:line.split()[1:] for line in lines}
 
-
-    cam2_intrinsics = {        # cam 2 intrinsics - cam 3 provided per frame in frames dict
+    cam2_intrinsics = {
         "fl_x": float(all_calibs[f'P_rect_02'][0]),
         "fl_y": float(all_calibs[f'P_rect_02'][5]),
         "cx": float(all_calibs[f'P_rect_02'][2]),
         "cy": float(all_calibs[f'P_rect_02'][6])}
-    
 
-    cam3_intrinsics = { #cam 3 
+    cam3_intrinsics = {
         "fl_x": float(all_calibs[f'P_rect_03'][0]),
         "fl_y": float(all_calibs[f'P_rect_03'][5]),
         "cx": float(all_calibs[f'P_rect_03'][2]),
         "cy": float(all_calibs[f'P_rect_03'][6])}
-    
-
 
     d = cam2_intrinsics
     d = { **d,
@@ -150,7 +137,6 @@ def parse_transform_multicam(basedir, date, drive, start_frame_idx=0, end_frame_
     # cam 3 frames -- add cam intrinsics per frame
     for i in range(start_frame_idx, end_frame_idx):
         frame_dicts.append(get_frame_dict_cam3(os.path.join(folder_cam3, all_frames_cam3[i]), data,i, cam3_intrinsics))
-
 
     d["frames"] = frame_dicts
 

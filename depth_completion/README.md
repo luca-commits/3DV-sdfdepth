@@ -1,6 +1,6 @@
 # Depth Completion Module
 
-The code in this folder was adapted from https://github.com/danishnazir/SemAttNet.
+All code in this folder was adapted from https://github.com/danishnazir/SemAttNet.
 
 ## Steps to generate the completed depths for the KITTI dataset:
 

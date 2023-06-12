@@ -244,7 +244,6 @@ class three_branch_bb(nn.Module):
 
         rgb_conf, semantic_conf, d_conf = torch.chunk(self.softmax(torch.cat((rgb_conf, semantic_conf, d_conf), dim=1)), 3, dim=1)
         output = rgb_conf*rgb_depth + d_conf*d_depth + semantic_conf * semantic_depth
-        #output =  d_conf*d_depth
         
         if(self.args.network_model == 'e'):
             return rgb_depth, semantic_depth, d_depth, output
@@ -262,9 +261,6 @@ class three_branch_bb(nn.Module):
 # CSPN++ Implementation Borrowed from 
 
 # https://github.com/JUGGHM/PENet_ICRA2021/blob/main/model.py
-
-
-
 
 class A_CSPN_plus_plus(nn.Module):
     def __init__(self, args):
