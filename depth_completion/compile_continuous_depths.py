@@ -13,16 +13,6 @@ import vis_utils
 
 parser = argparse.ArgumentParser(description='Sparse-to-Dense')
 
-parser.add_argument('--data-folder',
-                    default="",
-                    type=str,
-                    metavar='PATH',
-                    help='data folder (default: none)')
-parser.add_argument('--data-folder-rgb',
-                    default="",
-                    type=str,
-                    metavar='PATH',
-                    help='data folder rgb (default: none)')
 parser.add_argument('-e', '--evaluate', default='', type=str, metavar='PATH')
 parser.add_argument('--network-model', default='', type=str)
 parser.add_argument('--img-dir', default='', type=str, help='path to the rgb images')
