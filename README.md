@@ -2,6 +2,8 @@
 
 This code repository contains source code developed for the purposes of the project that was an integral part of the 2023 3D Vision course at ETH.
 
+The steps outlined for running the code all assume execution on the ETH Euler cluster.
+
 ### Generating normal maps
 
 Generating normal maps relies on the omnidata model.
@@ -11,6 +13,18 @@ Clone https://github.com/EPFL-VILAB/omnidata.git and follow the instructions in 
 ### Depth Completion
 
 For depth completion, we use the SemAttNet model available here: https://github.com/danishnazir/SemAttNet.
+
+### Training scene representation models
+
+Once you have generated the scene dataset following the instructions oulined above, you are ready to start training the scene representation model (MonoSDF).
+
+To train the scene representation model, edit the `training/sdfstudio/submit_training.sh` file and change the `SCENE_NAME` variable to the scene that you want to train the representation of. If needed, also change the path to the data.
+
+### Rendering novel views
+
+Once you have trained the scene representation model, to render novel views for a particular scene, you are ready to render the novel views of that scene.
+
+To render novel views, edit the `training/sdfstudio/render_views.sh` file and change the `SCENE_NAME`, `NERF_NAME`, `TIMESTAMP` and `ANGLE` variables to the desired values. (hint: the `NERF_NAME` and `TIMESTAMP` can be found in the path to your saved model in the outputs folder, an example is given by the default values in the `render_views.sh` script)
 
 
 ## Authors
