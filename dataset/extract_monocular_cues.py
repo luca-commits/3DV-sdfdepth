@@ -14,7 +14,7 @@ from PIL import Image
 from torchvision import transforms
 from tqdm import tqdm
 
-torch.set_num_threads(8)
+torch.set_num_threads(32)
 
 parser = argparse.ArgumentParser(description="Visualize output for depth or surface normals")
 
