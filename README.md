@@ -62,17 +62,7 @@ To be able to train the MonoSDF model, for each image in the KITTI dataset, we n
 
 Clone https://github.com/EPFL-VILAB/omnidata.git and follow the instructions in the repository to install Omnidata and download the pretrained models: https://github.com/EPFL-VILAB/omnidata/tree/main/omnidata_tools/torch#pretrained-models.
 
-<!-- Once the omnidata models have been downloaded, you can generate the inferred normal maps for the KITTI dataset.
-
-To generate the inferred normal maps, call the `dataset/extract_monocular_cues.py` script and provide it with the following arguments:
-
-    - omnidata_path: path to the cloned omnidata repository
-    - pretrained_models: path to directory containing pretrained omnidata models
-    - task: normal
-    - img_path: path to KITTI RGB images
-    - output_path: path where normal maps will be stored -->
-
-### 2. Depth Completion
+### 3. Depth Completion
 
 The MonoSDF model used requires complete depth maps, but the ground truth depth data present in the KITTI dataset is sparse. Therefore, we need to complete the ground truth depth maps. For depth completion, we use the SemAttNet model available here: https://github.com/danishnazir/SemAttNet.
 
@@ -92,13 +82,22 @@ The MonoSDF model used requires complete depth maps, but the ground truth depth 
 
 - The comleted KITTI depth maps will be in the `depth_completion/cont_depth` directory
 
-### 3. Generating the scene dataset
+### 4. Generating the scene dataset
 
-Define which KITTI scenes you want to train scene representation models by listing them in the `train_syncs.txt` file. To run the generation code, just start the `submit_preprocessing.sh` script.
+Define which KITTI scenes you want to train scene representation models by listing them in the `train_syncs.txt` file. To run the generation code, in the `submit_preprocessing.sh` script, change the following constants:
+
+ - OUTPUT_DIR: directory where the generated scene datasets will be stored
+ - KITTI_RGB: path to KITTI RGB images
+ - IMAGE_DIR: directory which will be used to store intermediate dataset files
+ - COMPLETED_DEPTH_DIR: directory containing completed depths (output of previous step)
+ - OMNIDATA_PATH: path to the downloaded Omnidata repository
+ - PRETRAINED_OMNIDATA_MODELS: path to directory containing pretrained Omnidata models
+
+After editing the constants, start the `submit_preprocessing.sh` script.
 
 The scenes will be split into sections of 100 frames and each 100 frame section will be used to train a separate scene representation model. 
 
-### 4. Training scene representation models
+### 5. Training scene representation models
 
 Once you have generated the scene dataset following the instructions oulined above, you are ready to start training the scene representation model (MonoSDF).
 
@@ -106,7 +105,7 @@ To train the scene representation model, edit the `training/sdfstudio/submit_tra
 
 The output of this phase of the pipeline are the trained scene representation models, which will be present in the `training/sdfstudio/output` directory.
 
-### 5. Rendering novel views
+### 6. Rendering novel views
 
 Once you have trained the scene representation model, to render novel views for a particular scene, you are ready to render the novel views of that scene.
 
@@ -114,7 +113,7 @@ To render novel views, edit the `training/sdfstudio/render_views.sh` file and ch
 
 The rendered scenes will be present in the `training/sdfstudio/renders` directory.
 
-### 6. Training and evaluating the monocular depth prediction network
+### 7. Training and evaluating the monocular depth prediction network
 
 To train the monocular depth prediction model using the ground truth and novel views, run the `monocular_depth_estimation/train.py` script and provide it with the following arguments:
 
