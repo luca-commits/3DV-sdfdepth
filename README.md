@@ -10,6 +10,16 @@ Generating normal maps relies on the omnidata model.
 
 Clone https://github.com/EPFL-VILAB/omnidata.git and follow the instructions in the repository to install Omnidata and download the pretrained models: https://github.com/EPFL-VILAB/omnidata/tree/main/omnidata_tools/torch#pretrained-models.
 
+Once the omnidata models have been downloaded, you can generate the inferred normal maps for the KITTI dataset.
+
+To generate the inferred normal maps, call the `dataset/extract_monocular_cues.py` script and provide it with the following arguments:
+
+    - omnidata_path: path to the cloned omnidata repository
+    - pretrained_models: path to directory containing pretrained omnidata models
+    - task: normal
+    - img_path: path to KITTI RGB images
+    - output_path: path where normal maps will be stored
+
 ### Depth Completion
 
 For depth completion, we use the SemAttNet model available here: https://github.com/danishnazir/SemAttNet.
@@ -20,16 +30,19 @@ Once you have generated the scene dataset following the instructions oulined abo
 
 To train the scene representation model, edit the `training/sdfstudio/submit_training.sh` file and change the `SCENE_NAME` variable to the scene that you want to train the representation of. If needed, also change the path to the data.
 
+The output of this phase of the pipeline are the trained scene representation models, which will be present in the `training/sdfstudio/output` directory.
+
 ### Rendering novel views
 
 Once you have trained the scene representation model, to render novel views for a particular scene, you are ready to render the novel views of that scene.
 
 To render novel views, edit the `training/sdfstudio/render_views.sh` file and change the `SCENE_NAME`, `NERF_NAME`, `TIMESTAMP` and `ANGLE` variables to the desired values. (hint: the `NERF_NAME` and `TIMESTAMP` can be found in the path to your saved model in the outputs folder, an example is given by the default values in the `render_views.sh` script)
 
+The rendered scenes will be present in the `training/sdfstudio/renders` directory.
 
 ## Authors
 
-Niall Siegenheim, Lovro Rabuzin, Luca Wolfart, Mert Ertugrul
+Niall Siegenheim, Luca Wolfart, Lovro Rabuzin, Mert Ertugrul
 
 D-INFK, ETH Zurich
 

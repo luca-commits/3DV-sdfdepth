@@ -1,4 +1,4 @@
-# adapted from https://github.com/EPFL-VILAB/omnidata
+# Code adapted from https://github.com/EPFL-VILAB/omnidata
 import argparse
 import glob
 import os.path
@@ -30,7 +30,7 @@ parser.set_defaults(task="NONE")
 parser.add_argument("--img_path", dest="img_path", help="path to rgb image")
 parser.set_defaults(im_name="NONE")
 
-parser.add_argument("--output_path", dest="output_path", help="path to where output image should be stored")
+parser.add_argument("--output_path", dest="output_path", help="path to where output images should be stored")
 parser.set_defaults(store_name="NONE")
 
 args = parser.parse_args()
@@ -39,7 +39,6 @@ root_dir = args.pretrained_models
 omnidata_path = args.omnidata_path
 
 sys.path.append(args.omnidata_path)
-# print(sys.path)
 from data.transforms import get_transform
 from modules.midas.dpt_depth import DPTDepthModel
 from modules.unet import UNet
@@ -48,8 +47,6 @@ trans_topil = transforms.ToPILImage()
 os.system(f"mkdir -p {args.output_path}")
 map_location = (lambda storage, loc: storage.cuda()) if torch.cuda.is_available() else torch.device("cpu")
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-# device = torch.device('mps')
-# map_location = torch.device('mps')
 
 # Fits the depth of d1 to be consistent with d0
 def fit_depth(d0, d1, overlap):
@@ -93,9 +90,6 @@ def fit_normal(n0, n1, overlap):
     # Residual
     t = n0_mean - R @ n1_mean
     
-    # print(torch.matmul(R, n1_fit).shape, t.unsqueeze(-1).shape)
-    # print(R, torch.linalg.norm(n0_fit - n1_fit), torch.linalg.norm(n0_fit - torch.matmul(R, n1_fit)))
-    
     return (R @ n1.unsqueeze(-1)).squeeze()
 
 # get target task and model
@@ -117,8 +111,7 @@ if args.task == "normal":
 
 elif args.task == "depth":
     image_size = 384
-    pretrained_weights_path = os.path.join(root_dir, "omnidata_dpt_depth_v2.ckpt")  # 'omnidata_dpt_depth_v1.ckpt'
-    # model = DPTDepthModel(backbone='vitl16_384') # DPT Large
+    pretrained_weights_path = os.path.join(root_dir, "omnidata_dpt_depth_v2.ckpt")
     model = DPTDepthModel(backbone="vitb_rn50_384")  # DPT Hybrid
     checkpoint = torch.load(pretrained_weights_path, map_location=map_location)
     if "state_dict" in checkpoint:
