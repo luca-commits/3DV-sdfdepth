@@ -12,7 +12,7 @@ for scene in scenes:
     
     print(date, drive)
     
-    if os.path.exists(f"/cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/datasets_poster/{scene}"):
+    if os.path.exists(f"/cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/datasets_paper/{scene}"):
         continue
     
     os.system(f"mkdir -p /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/images/{date}/")
@@ -42,13 +42,13 @@ for scene in scenes:
                     --basedir /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/images/ \
                     --date {date} --drive {drive} --start_frame {start_frame} --end_frame {end_frame}")
         
-        # Convert Nerfstudio to SDFStudio dataset, generating depths and normals using Omnidata 
+        # Convert Nerfstudio to SDFStudio dataset, generating normals using Omnidata and copying the upsampled depths from the right location
         os.system(f"python process_nerfstudio_to_sdfstudio.py --data-type colmap --scene-type unbound \
                     --data /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/images/{date}/{scene}/ \
                     --depth-data /cluster/project/infk/courses/252-0579-00L/group26/depth_completition/stupid_models/SemAttNet/cont_depth/{date}/{scene}/ \
                     --output-dir /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/datasets_paper/{scene}_{clip_idx}/ \
                     --omnidata-path /cluster/project/infk/courses/252-0579-00L/group26/omnidata/omnidata_tools/torch/ \
                     --pretrained-models /cluster/project/infk/courses/252-0579-00L/group26/omnidata/omnidata_tools/torch/pretrained_models/ \
-                    --mono-prior --dry-run")
+                    --mono-prior")
     
     print()
