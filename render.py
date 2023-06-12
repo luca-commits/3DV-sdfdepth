@@ -1,7 +1,6 @@
-#!/usr/bin/env python
-"""
-render.py
-"""
+# Code adapted from the original SDF Studio repository:
+# https://github.com/autonomousvision/sdfstudio/blob/master/scripts/render.py
+
 from __future__ import annotations
 
 import json
@@ -60,7 +59,7 @@ def _render_trajectory_video(
     seconds: float = 5.0,
     output_format: Literal["images", "video"] = "images",
 ) -> None:
-    """Helper function to create a video of the spiral trajectory.
+    """Helper function to create a video of the given trajectory.
 
     Args:
         pipeline: Pipeline to evaluate with.
@@ -78,25 +77,18 @@ def _render_trajectory_video(
     cameras = cameras.to(pipeline.device)
     reference_camera = reference_camera.to(pipeline.device)
 
-    # gt_depth = torch.load(reference_depth)
+    #Getting depth estimates for a view of the scene that corresponds to a ground truth depth map
     gt_depth = torch.from_numpy(np.load(reference_depth))
     with torch.no_grad():
         output_depth = pipeline.model.get_outputs_for_camera_ray_bundle(reference_camera.generate_rays(camera_indices=0))["depth"].cpu()
-    # output_depth = output_depth.squeeze(2)
+
     reference_crop = transforms.CenterCrop((output_depth.shape[0], output_depth.shape[1]))
+
+    #Establishing scene scale and shift to be able to recover ground truth depth
     gt_depth = reference_crop(gt_depth)
     gt_depth = gt_depth / scene_scale
     gt_depth = gt_depth * 1000
     
-    # print("Output depth shape:")
-    # print(output_depth.shape)
-    # print(output_depth.min())
-    # print(output_depth.max())
-    # print("GT depth shape:")
-    # print(gt_depth.shape)
-    # print(gt_depth.min())
-    # print(gt_depth.max())
-
     scale, shift = compute_scale_and_shift(output_depth[None, ..., 0], gt_depth[None, ...], gt_depth[None, ...] > 0.0)
     scale, shift = scale.item(), shift.item()
 
@@ -115,7 +107,6 @@ def _render_trajectory_video(
         rgb_output_image_dir.mkdir(parents=True, exist_ok=True)
         depth_output_image_dir.mkdir(parents=True, exist_ok=True)
     with progress:
-        #CHANGE range
         for camera_idx in progress.track(range(cameras.size), description=""):
             camera_ray_bundle = cameras.generate_rays(camera_indices=camera_idx)
             with torch.no_grad():
@@ -129,46 +120,11 @@ def _render_trajectory_video(
             render_rgb_image = np.concatenate(render_rgb_image, axis=1)
             render_depth_image = np.concatenate(render_depth_image, axis=1)
             render_depth_image = np.squeeze(render_depth_image, axis=2)
-            # print("unmodified depth")
-            # print(render_depth_image.min())
-            # print(render_depth_image.max())
             render_depth_image = render_depth_image * scale + shift
             render_depth_image = np.clip(render_depth_image, 0, a_max=65535)
-            # print("scale and shift")
-            # print(render_depth_image.min())
-            # print(render_depth_image.max())
-            # np.save(f"depth{camera_idx}.npy", render_depth_image)
             render_depth_image = (render_depth_image).astype(np.uint16)
-            # print("uint16")
-            # print(render_depth_image.min())
-            # print(render_depth_image.max())
-            # for rendered_output_name in rendered_output_names:
-            #     if rendered_output_name not in outputs:
-            #         CONSOLE.rule("Error", style="red")
-            #         CONSOLE.print(f"Could not find {rendered_output_name} in the model outputs", justify="center")
-            #         CONSOLE.print(f"Please set --rendered_output_name to one of: {outputs.keys()}", justify="center")
-            #         sys.exit(1)
-            #     output_image = outputs[rendered_output_name].cpu().numpy()
-            #     render_image.append(output_image)
-            # render_image = np.concatenate(render_image, axis=1)
-            # if rendered_output_names[0] == "depth":
-            #         print(render_image.shape)
-            #         render_image = np.squeeze(render_image, axis=2)
-            #         print("unmodified depth")
-            #         print(render_image.min())
-            #         print(render_image.max())
-            #         print("scale and shift")
-            #         render_image = render_image * scale + shift
-
-            #         np.save(f"depth{camera_idx}.npy", render_image)
-            #         print(render_image.min())
-            #         print(render_image.max())
-            #         render_image = (render_image).astype(np.uint16)
-            #         print(render_image.min())
-            #         print(render_image.max())
             rgb_images.append(render_rgb_image)
             depths.append(render_depth_image)
-            # print(f"rendered image {camera_idx}", flush=True)
 
     if output_format == "images":
         print("saving images")
@@ -244,11 +200,15 @@ class RenderTrajectory:
 
 
     def get_cameras(self, meta_data_path = "meta_data.json", cameras_save_path="cameras.json", angle=0.0):
+        """Get cameras for rendering.
+        
+        A camera includes the position and orientation of the camera, as well as the
+        intrinsics of the camera.
+        """
         # load meta data
         f = open(meta_data_path)
   
         meta = json.load(f)
-        # print(meta)
 
         fx = []
         fy = []
@@ -268,17 +228,8 @@ class RenderTrajectory:
 
         for i, frame in enumerate(meta["frames"]):
 
-            # print()
-            # print("frame", i)
-            # print(frame)
-            # print()
             intrinsics = torch.tensor(frame["intrinsics"])
             camtoworld = torch.tensor(frame["camtoworld"])
-            
-            # TODO: figure out what to put here
-            #camtoworld = apply_something_to_camtoworld(camtoworld)
-            
-            
 
             fx.append(intrinsics[0, 0])
             fy.append(intrinsics[1, 1])
@@ -286,15 +237,11 @@ class RenderTrajectory:
             cy.append(intrinsics[1, 2])
             camera_to_worlds.append(camtoworld)
 
-
         fx = torch.stack(fx)
         fy = torch.stack(fy)
         cx = torch.stack(cx)
         cy = torch.stack(cy)
         camera_to_worlds = torch.stack(camera_to_worlds)
-        
-        ## moved this up here
-        # camera_to_worlds[:, 0:3, 1:3] *= -1
 
         num_images = len(camera_to_worlds)
 
@@ -310,19 +257,16 @@ class RenderTrajectory:
         rotmats_1 = camera_to_worlds_1[:,0:3,0:3]
         rotmats_2 = camera_to_worlds_2[:,0:3,0:3]
 
+        # Generating new camera poses according to the policy
+        # described in the paper
         rotmats_i1 = []
         rotmats_i2 = []
+        #getting rotation matrix for rotating novel views
         rotmat_out_1 = get_rotmat(angle)
         rotmat_out_2 = get_rotmat(-angle)
         for i in range (len(rotmats_1)):
             rotmat_1 = rotmats_1[i]
             rotmat_2 = rotmats_2[i]
-            
-            # rotation_obj = R.from_matrix(np.stack((rotmat_1, rotmat_2)))
-
-            # slerp = Slerp(np.array([0, 1]), rotation_obj)
-            # rotmat_i = slerp(0.5)
-            # rotmat_i = rotmat_i.as_matrix()
 
             rotmat_i1 = np.dot(rotmat_out_1, rotmat_1)
             rotmat_i2 = np.dot(rotmat_out_2, rotmat_2)
@@ -330,7 +274,6 @@ class RenderTrajectory:
             rotmats_i1.append(rotmat_i1)
             rotmats_i2.append(rotmat_i2)
         
-        #change
         rotmats_i = np.vstack((rotmats_i1, rotmats_i2))
 
         camera_to_worlds = np.zeros((num_images, 4, 4))
@@ -338,19 +281,12 @@ class RenderTrajectory:
         camera_to_worlds[:,0:3,0:3] = rotmats_i
         camera_to_worlds[:,0:3,3] = t_i
         
-        # print(camera_to_worlds.shape)
-        # print(camera_to_worlds[0])
-         # TODO: figure out if this is needed
-        
         # Convert from COLMAP's/OPENCV's camera coordinate system to nerfstudio
         camera_to_worlds[:, 0:3, 1:3] *= -1
         reference_cam_to_world[:, 0:3, 1:3] *= -1
 
-
-        # Remember to uncomment this as well
         camera_to_worlds = torch.tensor(camera_to_worlds).float()
 
-        # if self.config.auto_orient:
         camera_to_worlds, transform = camera_utils.auto_orient_and_center_poses(
             camera_to_worlds,
             method="up",
@@ -363,9 +299,7 @@ class RenderTrajectory:
             center_poses=False,
         )
 
-
-        # CHANGE THIS!!!!!!
-        height, width = 375, 1242#meta["height"], meta["width"]
+        height, width = 375, 1242
         cameras = Cameras(
             fx=fx,
             fy=fy,
@@ -389,20 +323,13 @@ class RenderTrajectory:
         )
         
         camera_path = {}
-        #camera_path['seconds'] = 5
         
         camera_list = []
         
         for i in range(len(meta["frames"])):
             camera_list.append(cameras.to_json(camera_idx=i))
         
-        
         camera_path['cameras'] = camera_list
-        
-        #maybe uncomment idek
-        # with open(os.path.join(save_loc,'transforms.json'),'w') as f:
-        #     json.dump(d,f,indent=4)
-        
         
         return cameras, reference_camera, reference_depth, scene_scale
 
@@ -412,38 +339,4 @@ if __name__ == "__main__":
     tyro.extras.set_accent_color("bright_yellow")
     tyro.cli(RenderTrajectory).main()
 
-
-
-# For sphinx docs
 get_parser_fn = lambda: tyro.extras.get_parser(RenderTrajectory)  # noqa
-
-
-
-"""
-Load a checkpoint, render a trajectory, and save as images.
-
-╭─ arguments ────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ -h, --help              show this help message and exit                                                            │
-│ --load-config PATH      Path to config YAML file. (required)                                                       │
-│ --rendered-output-names STR [STR ...]                                                                              │
-│                         Name of the renderer outputs to use. rgb, depth, etc. concatenates them along y axis       │
-│                         (default: rgb)                                                                             │
-│ --traj {spiral,filename}                                                                                           │
-│                         Trajectory to render. (default: filename)                                                    │
-│ --downscale-factor INT  Scaling factor to apply to the camera image resolution. (default: 1)                        │
-│ --output-path PATH      Name of the output file. (default: renders/output.mp4)                                     │
-│ --seconds FLOAT         How long the video should be. (default: 5.0)                                               │
-│ --output-format {images,video}                                                                                     │
-│                         How to save output data. (default: images)                                                  │
-│ --eval-num-rays-per-chunk {None}|INT                                                                               │
-│                         Specifies number of rays per chunk during eval. (default: None)
-"""
-
-
-# python render.py --load-config ../outputs/calib_test/monosdf/2023-04-27_155630/config.yml --output-path ../outputs/calib_test/monosdf_novel_views/2023-04-27_155630.png
-
-# 
-#
-#sbatch --wrap="python render.py --load-config ../outputs/calib_test/monosdf/2023-04-27_155630/config.yml --output-path ../outputs/calib_test/monosdf_novel_views/2023-04-27_155630.png" --time=1:0:0 --gpus=1 --ntasks=4 --mem-per-cpu=16G --job-name=novel_views
-
-#

@@ -1,6 +1,23 @@
 # Monocular Depth Estimation with Virtual-View Supervision
 
+This code repository contains source code developed for the purposes of the project that was an integral part of the 2023 3D Vision course at ETH.
 
+### Generating normal maps
+
+Generating normal maps relies on the omnidata model.
+
+Clone https://github.com/EPFL-VILAB/omnidata.git and follow the instructions in the repository to install Omnidata and download the pretrained models: https://github.com/EPFL-VILAB/omnidata/tree/main/omnidata_tools/torch#pretrained-models.
+
+### Depth Completion
+
+For depth completion, we use the SemAttNet model available here: https://github.com/danishnazir/SemAttNet.
+
+
+## Authors
+
+Niall Siegenheim, Lovro Rabuzin, Luca Wolfart, Mert Ertugrul
+
+D-INFK, ETH Zurich
 
 <!-- ## Getting started
 
