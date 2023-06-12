@@ -2,11 +2,39 @@
 
 This code repository contains source code developed for the purposes of the project that was an integral part of the 2023 3D Vision course at ETH.
 
+## Repository structure:
+
+* `monocular_depth_estimation` - contains code for training and validating monocular depth prediction models
+    * `eigen_<split>_files.txt` - text files listing the different splits of the dataset used by Eigen et al.
+    * `datasets.py` - defines the pytorch dataset used for working with KITTI data
+    * `loss.py` - defines the loss function for training our monocular depth prediction model
+    * `models.py` - defines the model used (U-Net with a resnet18 backbone)
+    * `utils.py` - utilities for training the model
+    * `train.py` - model training script
+* `depth completion` - contains code for getting completed depth maps from sparse ground truth KITTI depth maps
+* `dataset` - contains utilities for manipulating the KITTI data
+    * `extract_monocular_cues.py` - code for getting surface normal maps using the omnidata model
+    * `generate_nerfstudio_dataset.py`
+    * `process_data.py`
+    * `process_nerfstudio_to_sdfstudio.py`
+* `training/sdfstudio` - contains scripts for training MonoSDF models and rendering novel views using the trained models
+    * `render.py` - code for rendering novel views
+    * `submit_training.sh` - script for invoking the training of a MonoSDF model for a particular scene
+    * `render_views.sh` - script for invoking the rendering of a scene for which a MonoSDF model was trained
+
+## Running the code
+
 The steps outlined for running the code all assume execution on the ETH Euler cluster.
 
-### Generating normal maps
+### 0. Download the KITTI dataset
 
-Generating normal maps relies on the omnidata model.
+Download the raw KITTI data using the download script at https://www.cvlibs.net/datasets/kitti/raw_data.php.
+
+Download the KITTI depth data from https://www.cvlibs.net/datasets/kitti/eval_depth.php?benchmark=depth_prediction
+
+### 1. Generating normal maps
+
+To be able to train the MonoSDF model, for each image in the KITTI dataset, we need corresponding surface normal maps. Since the surface normal maps themselves aren't part of the KITTI datasets, generating normal maps relies on the omnidata model.
 
 Clone https://github.com/EPFL-VILAB/omnidata.git and follow the instructions in the repository to install Omnidata and download the pretrained models: https://github.com/EPFL-VILAB/omnidata/tree/main/omnidata_tools/torch#pretrained-models.
 

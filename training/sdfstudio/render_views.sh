@@ -17,7 +17,7 @@ ANGLE=3
 module load gcc/8.2.0 ffmpeg/5.0 cuda/11.6.2 python/3.8.5 open3d/0.9.0 intel-tbb/2020.3 eth_proxy
 source /cluster/project/infk/courses/252-0579-00L/group26/sdfstudio/venv/bin/activate
 
-python ../../render.py \
+python render.py \
 --load-config output/${NERF_NAME}/monosdf/${TIMESTAMP}/config.yml \
 --metadata-path /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/datasets_poster/${SCENE_NAME}/meta_data.json \
 --angle ${ANGLE} \

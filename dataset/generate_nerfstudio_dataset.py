@@ -157,9 +157,6 @@ def parse_transform_multicam(basedir, date, drive, start_frame_idx=0, end_frame_
     with open(os.path.join(save_loc,'transforms.json'),'w') as f:
         json.dump(d,f,indent=4)
 
-
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generate Nerfstudio dataset')
     parser.add_argument('--basedir', type=str, required=True)
