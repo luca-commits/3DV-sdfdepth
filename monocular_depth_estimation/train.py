@@ -16,11 +16,7 @@ MODEL_SUFFIX = "augmented"
 AUG_SIZE = -1
 USE_REAL_DATA = True
 
-def main():
-    # load data
-    data_path = "/cluster/project/infk/courses/252-0579-00L/group26/kitti"
-    aug_dir = "/cluster/project/infk/courses/252-0579-00L/group26/renders-all"
-
+def main(data_path, aug_dir):
     mean = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
 
@@ -84,4 +80,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data-path", type=str, default="/cluster/project/infk/courses/252-0579-00L/group26/kitti", help="path to KITTI data")
+    parser.add_argument("--aug-dir", type=str, default="/cluster/project/infk/courses/252-0579-00L/group26/renders-all", help="path to augmented data")
+    args = parser.parse_args()
+    main(args.data_path, args.aug_dir)

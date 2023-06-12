@@ -137,7 +137,6 @@ trans_rgb = transforms.Compose(
 
 def save_outputs(img_path, output_file_name):
     save_path = os.path.join(args.output_path, output_file_name.replace("_rgb", f"_{args.task}") + ".png")
-    # print(f"Reading input {img_path} ...")
     img = Image.open(img_path)
 
     # --- NEW -----------------------------
@@ -236,8 +235,6 @@ def save_outputs(img_path, output_file_name):
         
         np.save(save_path.replace(".png", ".npy"), output_smoothed.detach().cpu().numpy())
         trans_topil(output_smoothed).save(save_path)
-
-    # print(f"Writing output {save_path} ...")
 
 
 img_path = Path(args.img_path)

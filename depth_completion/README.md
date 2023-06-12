@@ -16,4 +16,4 @@ The code in this folder was adapted from https://github.com/danishnazir/SemAttNe
 
     `--target-dir` - Path to directory with KITTI depth maps
 
-4. The comleted KITTI depth maps will be in the cont_depth subdirectory
+4. The comleted KITTI depth maps will be in the `cont_depth` subdirectory
