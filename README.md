@@ -159,4 +159,4 @@ A sample of the data used is present in the `sample` directory. It includes the 
 
 Niall Siegenheim, Luca Wolfart, Lovro Rabuzin, Mert Ertugrul
 
-D-INFK, ETH Zurich
+D-INFK, D-MATH, ETH Zurich
