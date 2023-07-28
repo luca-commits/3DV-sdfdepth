@@ -38,7 +38,7 @@ def main(args):
     # currently in random order??, probably need to sort
     for frame in frames:
         # load intrinsics from polycam
-        if args.data_type == "polycam":
+        if args.data_type == "polycam" or args.data_type == "none":
             cam_intrinsics.append(np.array([
                 [frame["fl_x"], 0, frame["cx"]],
                 [0, frame["fl_y"], frame["cy"]],
@@ -74,6 +74,7 @@ def main(args):
         
     # Check correctness
     assert len(poses) == len(image_paths)
+    print(len(cam_intrinsics))
     assert len(poses) == len(cam_intrinsics) or len(cam_intrinsics) == 1
 
     # Filter invalid poses
@@ -100,7 +101,7 @@ def main(args):
         scale_mat[:3] *= scene_scale
         scale_mat = np.linalg.inv(scale_mat)
     else:
-        scene_scale = 2.0 / np.maximum(np.max(max_vertices - min_vertices) * 1.5, 100.)
+        scene_scale = 2.0 / (np.max(max_vertices - min_vertices) + 100.)
         scene_center = (min_vertices + max_vertices) / 2.0
         poses[:, :3, 3] -= scene_center
         poses[:, :3, 3] *= scene_scale
@@ -109,7 +110,7 @@ def main(args):
         scale_mat[:3, 3] -= scene_center
         scale_mat[:3] *= scene_scale
         scale_mat = np.linalg.inv(scale_mat)
-        scale_mat = np.eye(4).astype(np.float32)
+        # scale_mat = np.eye(4).astype(np.float32)
 
     print("Scene scale: ", scene_scale)
 
@@ -134,8 +135,8 @@ def main(args):
         # TODO: case-by-case near far based on depth prior
         #  such as colmap sparse points or sensor depths
         scene_box = {
-            "aabb": [[-1, -1, -1], [1, 1, 1]],
-            "near": 0.1 * scene_scale,
+            "aabb": [[-1, -1, -0.25], [1, 1, 0.25]],
+            "near": 1e-7 * scene_scale,
             "far": 25. * scene_scale,
             "radius": 1.0,
             "collider_type": "box",
@@ -209,7 +210,7 @@ def main(args):
                 new_depth = depth_trans(depth_PIL)
                 new_depth = np.asarray(new_depth)
                 # scale depth as we normalize the scene to unit box
-                new_depth = np.copy(new_depth)
+                new_depth = np.copy(new_depth) / 255 * scene_scale
                 plt.imsave(out_depth_path, new_depth, cmap="viridis")
                 np.save(str(out_depth_path).replace(".png", ".npy"), new_depth)
 
@@ -271,7 +272,7 @@ if __name__ == "__main__":
     parser.add_argument("--data", dest="input_dir", required=True, help="path to nerfstudio data directory")
     parser.add_argument("--depth-data", dest="depth_dir", help="path to upsampled depths", default=None)
     parser.add_argument("--output-dir", dest="output_dir", required=True, help="path to output data directory")
-    parser.add_argument("--data-type", dest="data_type", required=True, choices=["colmap", "polycam"])
+    parser.add_argument("--data-type", dest="data_type", required=True, choices=["colmap", "polycam", "none"])
     parser.add_argument("--scene-type", dest="scene_type", required=True, choices=["indoor", "object", "unbound"],
                         help="The scene will be normalized into a unit sphere when selecting indoor or object.")
     parser.add_argument("--scene-scale-mult", dest="scene_scale_mult", type=float, default=None,

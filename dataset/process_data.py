@@ -5,6 +5,8 @@ target_num_frames_per_clip = 100
 
 with open('train_syncs.txt') as file:
     scenes = [line.rstrip() for line in file]
+    
+scenes = ['2011_09_26_drive_0001_sync']
 
 for scene in scenes:
     date = scene[:10]
@@ -12,18 +14,18 @@ for scene in scenes:
     
     print(date, drive)
     
-    if os.path.exists(f"/cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/datasets_paper/{scene}"):
-        continue
-    
-    os.system(f"mkdir -p /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/images/{date}/")
-    
-    # Copy intrinsics files
-    os.system(f"cp /cluster/project/infk/courses/252-0579-00L/group26/kitti/rgb_images/{date}/*.txt \
-                /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/images/{date}/")
-    
-    # Copy images
-    os.system(f"cp -r /cluster/project/infk/courses/252-0579-00L/group26/kitti/rgb_images/{date}/{scene} \
-                /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/images/{date}/")
+    # if os.path.exists(f"/cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/datasets_paper/{scene}"):
+    #     continue
+    # 
+    # os.system(f"mkdir -p /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/images/{date}/")
+    # 
+    # # Copy intrinsics files
+    # os.system(f"cp /cluster/project/infk/courses/252-0579-00L/group26/kitti/rgb_images/{date}/*.txt \
+    #             /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/images/{date}/")
+    # 
+    # # Copy images
+    # os.system(f"cp -r /cluster/project/infk/courses/252-0579-00L/group26/kitti/rgb_images/{date}/{scene} \
+    #             /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/images/{date}/")
     
     # Get number of frames in scene
     num_frames = len(os.listdir(f'/cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/images/{date}/{scene}/image_02/data/'))
@@ -46,9 +48,9 @@ for scene in scenes:
         os.system(f"python process_nerfstudio_to_sdfstudio.py --data-type colmap --scene-type unbound \
                     --data /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/images/{date}/{scene}/ \
                     --depth-data /cluster/project/infk/courses/252-0579-00L/group26/depth_completition/stupid_models/SemAttNet/cont_depth/{date}/{scene}/ \
-                    --output-dir /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/datasets_paper/{scene}_{clip_idx}/ \
+                    --output-dir /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/datasets_cvpr/{scene}_{clip_idx}/ \
                     --omnidata-path /cluster/project/infk/courses/252-0579-00L/group26/omnidata/omnidata_tools/torch/ \
                     --pretrained-models /cluster/project/infk/courses/252-0579-00L/group26/omnidata/omnidata_tools/torch/pretrained_models/ \
-                    --mono-prior")
+                    --mono-prior --dry-run")
     
     print()

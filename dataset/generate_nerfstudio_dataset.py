@@ -6,8 +6,8 @@ import pykitti
 
 import argparse
 
-rotmat = np.transpose(np.array([[-1, 0, 0, 0],
-                                [0, 1, 0, 0],
+rotmat = np.transpose(np.array([[0, 1, 0, 0],
+                                [-1, 0, 0, 0],
                                 [0, 0, 1, 0],
                                 [0, 0, 0, 1]]))
 
