@@ -47,10 +47,10 @@ for scene in scenes:
         # Convert Nerfstudio to SDFStudio dataset, generating normals using Omnidata and copying the upsampled depths from the right location
         os.system(f"python process_nerfstudio_to_sdfstudio.py --data-type colmap --scene-type unbound \
                     --data /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/images/{date}/{scene}/ \
-                    --depth-data /cluster/project/infk/courses/252-0579-00L/group26/depth_completition/stupid_models/SemAttNet/cont_depth/{date}/{scene}/ \
+                    --depth-data /cluster/project/infk/courses/252-0579-00L/group26/kitti/depth/data_depth_annotated/train/{scene}/proj_depth/groundtruth/ \
                     --output-dir /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/datasets_cvpr/{scene}_{clip_idx}/ \
                     --omnidata-path /cluster/project/infk/courses/252-0579-00L/group26/omnidata/omnidata_tools/torch/ \
                     --pretrained-models /cluster/project/infk/courses/252-0579-00L/group26/omnidata/omnidata_tools/torch/pretrained_models/ \
-                    --mono-prior --dry-run")
+                    --mono-prior")
     
     print()
