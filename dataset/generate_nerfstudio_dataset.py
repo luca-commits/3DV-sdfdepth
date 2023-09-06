@@ -6,23 +6,15 @@ import numpy as np
 import pykitti
 
 def main(args):
-    # scene = "2011_09_26_drive_0001_sync"
     date = args.scene[:10]
     drive = args.scene[-9:-5]
 
-    rotmat = np.transpose(np.array([[0,  1, 0, 0],
-                                    [-1, 0, 0, 0],
-                                    [0,  0, 1, 0],
-                                    [0,  0, 0, 1]]))
-
-    # rgb_base_path = f"/cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/images"
-    # depth_base_path = f"/cluster/project/infk/courses/252-0579-00L/group26/kitti/depth/data_depth_annotated/train"
-    # save_path = "/cluster/project/infk/courses/252-0579-00L/group26/sniall/3dv_sdfdepth/dataset"
-
     calib_data = pykitti.raw(args.rgb_base_path, date, drive)
 
+    # List to save transform matrix and paths for each frame
     frames = []
 
+    # Iterate over both cameras
     for cam_folder in ["image_02", "image_03"]:
         rgb_path = f"{args.rgb_base_path}/{date}/{args.scene}/{cam_folder}/data"
         depth_path = f"{args.depth_base_path}/{args.scene}/proj_depth/groundtruth/{cam_folder}"
@@ -33,6 +25,7 @@ def main(args):
         # Intersection of RGB and depth images
         filenames = [ f for f in sorted(rgb_files) if f in depth_files ]
 
+        # Iterate over all frames captured by the current camera
         for filename in filenames:
             i = int(filename.replace(".png", ""))
 
@@ -40,6 +33,12 @@ def main(args):
                 calib_matrix = calib_data.calib.T_cam2_imu
             else:
                 calib_matrix = calib_data.calib.T_cam3_imu
+
+            # Adjust coordinate systems
+            rotmat = np.transpose(np.array([[0,  1, 0, 0],
+                                            [-1, 0, 0, 0],
+                                            [0,  0, 1, 0],
+                                            [0,  0, 0, 1]]))
 
             transform_matrix = rotmat.dot(calib_data.oxts[i].T_w_imu.dot(np.linalg.inv(calib_matrix)))
             transform_matrix[0:3, 1:3] *= -1
@@ -69,6 +68,7 @@ def main(args):
         "frames": frames
     }
 
+    # Save transforms
     with open(os.path.join(args.save_path,'transforms.json'),'w') as f:
         json.dump(transforms, f, indent=4)
 
