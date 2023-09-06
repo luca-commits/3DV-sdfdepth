@@ -56,7 +56,7 @@ def main(args):
         assert img_path.exists()
 
         if depth_dir is not None:
-            depth_path = depth_dir / file_path
+            depth_path = depth_dir / Path(frame["file_path"].replace("data/", ""))
 
             if not depth_path.exists():
                 continue
@@ -101,7 +101,7 @@ def main(args):
         scale_mat[:3] *= scene_scale
         scale_mat = np.linalg.inv(scale_mat)
     else:
-        scene_scale = 2.0 / (np.max(max_vertices - min_vertices) + 100.)
+        scene_scale = 2.0 / (np.max(max_vertices - min_vertices) + 5.)
         scene_center = (min_vertices + max_vertices) / 2.0
         poses[:, :3, 3] -= scene_center
         poses[:, :3, 3] *= scene_scale
@@ -135,7 +135,7 @@ def main(args):
         # TODO: case-by-case near far based on depth prior
         #  such as colmap sparse points or sensor depths
         scene_box = {
-            "aabb": [[-1, -1, -0.25], [1, 1, 0.25]],
+            "aabb": [[-1, -1, -1], [1, 1, 1]],
             "near": 1e-7 * scene_scale,
             "far": 25. * scene_scale,
             "radius": 1.0,
@@ -202,7 +202,7 @@ def main(args):
         if args.mono_prior:
             frame["mono_depth_path"] = rgb_path.replace("_rgb.png", "_depth.npy")
 
-            if depth_dir is not None and not args.dry_run:
+            if depth_dir is not None:
                 depth_path = depth_paths[idx]
                 out_depth_path = output_dir / f"{out_index:06d}_depth.png"
                 depth = cv2.imread(str(depth_path), -1).astype(np.float32)
@@ -210,8 +210,9 @@ def main(args):
                 new_depth = depth_trans(depth_PIL)
                 new_depth = np.asarray(new_depth)
                 # scale depth as we normalize the scene to unit box
-                new_depth = np.copy(new_depth) / 255 * scene_scale
-                plt.imsave(out_depth_path, new_depth, cmap="viridis")
+                new_depth = np.copy(new_depth) / 256 * scene_scale
+                # plt.imsave(out_depth_path, new_depth, cmap="viridis")
+                cv2.imwrite(str(out_depth_path), new_depth)
                 np.save(str(out_depth_path).replace(".png", ".npy"), new_depth)
 
             frame["mono_normal_path"] = rgb_path.replace("_rgb.png", "_normal.npy")
