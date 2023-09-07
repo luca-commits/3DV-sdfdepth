@@ -93,7 +93,7 @@ if __name__ == "__main__":
     parser.add_argument("--save-path", dest="save_path", required=True, help="Where to drop the transforms.json file")
     parser.add_argument("--first_index", dest="first_index", required=False, default=0)
     parser.add_argument("--last_index", dest="last_index", required=False, default=100000)
-    parser.add_argument("--camera", dest="cameras", nargs="+", default=[2, 3])
+    parser.add_argument("--camera", dest="cameras", nargs="+", default=["2", "3"])
 
     args = parser.parse_args()
 
