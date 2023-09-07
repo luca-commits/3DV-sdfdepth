@@ -104,7 +104,7 @@ def build_nyu_nerfstudio_dict(save_loc, img_folder, pose_file):
             continue
         metadata_dict["frames"].append({
             "file_path": timestamp + "rgb.png",
-            "transform_matrix": pose_vec2mat([float(x) for x in line.split(" ")[1:]] ),    #orbslam_to_nerfstudio_matrix(line.split(" ")),
+            "transform_matrix": pose_vec2mat(np.array([float(x) for x in line.split(" ")[1:]]) ),    #orbslam_to_nerfstudio_matrix(line.split(" ")),
             "depth_file_path": timestamp + "depth.png"
         })
 
