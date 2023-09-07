@@ -36,7 +36,7 @@ def pose_vec2mat(pvec, use_filler=True):
                                             [0,  0, 1, 0],
                                             [0,  0, 0, 1]]))
 
-    transform_matrix = rotmat.dot(w2c)
+    transform_matrix = rotmat.dot(c2w)
     transform_matrix[0:3, 1:3] *= -1
 
     #stackexchaneg advice
@@ -47,7 +47,7 @@ def pose_vec2mat(pvec, use_filler=True):
     # transform_matrix = np.transpose(rotmat.dot(mat))
     # # transform_matrix[0:3, 1:3] *= -1
 
-    return c2w.tolist()
+    return transform_matrix.tolist()
 
 
 def orbslam_to_nerfstudio_matrix(row):
