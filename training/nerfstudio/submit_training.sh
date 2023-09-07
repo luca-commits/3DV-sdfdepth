@@ -10,7 +10,7 @@
 #SBATCH --error=nerfstudio_training.err
 
 
-SCENE_NAME=2011_09_26_drive_0001_sync_1
+SCENE_NAME=2011_09_26_drive_0001_sync
 
 module purge
 module load gcc/8.2.0 cuda/11.8.0 python/3.9.9 eth_proxy
@@ -18,16 +18,23 @@ source /cluster/project/infk/courses/252-0579-00L/group26/nerfstudio/venv/bin/ac
 
 hostname -i
 ns-train depth-nerfacto \
---vis wandb \
+--vis viewer+wandb \
 --output-dir ./output \
 --steps-per-save 5000 \
---max-num-iterations 150000 \
+--max-num-iterations 50000 \
 --steps-per-eval-image 1000 \
 --pipeline.model.depth-loss-mult 0.5 \
-sdfstudio-data \
+--pipeline.model.predict-normals True \
+--pipeline.datamanager.camera-optimizer.mode off \
+nerfstudio-data \
 --data /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/datasets_cvpr/${SCENE_NAME} \
---include-mono-prior True \
---depth-unit-scale-factor 1. \
+--depth-unit-scale-factor 0.00390625
+
 # --data /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/images/2011_09_26/2011_09_26_drive_0001_sync
+# sdfstudio-data \
+# --data /cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/datasets_cvpr/${SCENE_NAME} \
+# --include-mono-prior True \
+# --depth-unit-scale-factor 1. \
+
 
 

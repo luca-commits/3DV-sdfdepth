@@ -3,6 +3,27 @@ import os
 import argparse
 import json
 
+def quat2rotm(q):
+    """Convert quaternion into rotation matrix """
+    q /= np.sqrt(np.sum(q**2))
+    x, y, z, s = q[:, 0], q[:, 1], q[:, 2], q[:, 3]
+    r1 = np.stack([1-2*(y**2+z**2), 2*(x*y-s*z), 2*(x*z+s*y)], axis=1)
+    r2 = np.stack([2*(x*y+s*z), 1-2*(x**2+z**2), 2*(y*z-s*x)], axis=1)
+    r3 = np.stack([2*(x*z-s*y), 2*(y*z+s*x), 1-2*(x**2+y**2)], axis=1)
+    return np.stack([r1, r2, r3], axis=1)
+
+def pose_vec2mat(pvec, use_filler=True):
+    """Convert quaternion vector represention to SE3 group"""
+    t, q = pvec[np.newaxis, 0:3], pvec[np.newaxis, 3:7]
+    R = quat2rotm(q)
+    t = np.expand_dims(t, axis=-1)
+    P = np.concatenate([R, t], axis=2)
+    if use_filler:
+        filler = np.array([0.0, 0.0, 0.0, 1.0]).reshape([1, 1, 4])
+        P = np.concatenate([P, filler], axis=1)
+    return P[0].tolist()
+
+
 def orbslam_to_nerfstudio_matrix(row):
     """
     Covert a quaternion into a full three-dimensional rotation matrix.
@@ -45,8 +66,8 @@ def orbslam_to_nerfstudio_matrix(row):
     ext_matrix = np.array(ext_matrix)
 
     rotmat = np.transpose(np.array([[-1, 0, 0, 0],
-                                [0, 1, 0, 0],
                                 [0, 0, 1, 0],
+                                [0, 1, 0, 0],
                                 [0, 0, 0, 1]]))
     ext_matrix = rotmat.dot(ext_matrix)
     ext_matrix[0:3, 1:3] *= -1
@@ -83,7 +104,7 @@ def build_nyu_nerfstudio_dict(save_loc, img_folder, pose_file):
             continue
         metadata_dict["frames"].append({
             "file_path": timestamp + "rgb.png",
-            "transform_matrix": orbslam_to_nerfstudio_matrix(line.split(" ")),
+            "transform_matrix": pose_vec2mat(np.array([float(x) for x in line.split(" ")[1:]]) ),    #orbslam_to_nerfstudio_matrix(line.split(" ")),
             "depth_file_path": timestamp + "depth.png"
         })
 
