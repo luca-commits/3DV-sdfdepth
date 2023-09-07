@@ -14,8 +14,18 @@ def main(args):
     # List to save transform matrix and paths for each frame
     frames = []
 
+    cam_folders = []
+
+    if "2" in args.cameras:
+        cam_folders.append("image_02")
+    if "3" in args.cameras:
+        cam_folders.append("image_03")
+
+    if len(cam_folders) == 0:
+        raise RuntimeError("No cameras to process. Check --camera argument")
+
     # Iterate over both cameras
-    for cam_folder in ["image_02", "image_03"]:
+    for cam_folder in cam_folders:
         rgb_path = f"{args.rgb_base_path}/{date}/{args.scene}/{cam_folder}/data"
         depth_path = f"{args.depth_base_path}/{args.scene}/proj_depth/groundtruth/{cam_folder}"
 
@@ -28,6 +38,9 @@ def main(args):
         # Iterate over all frames captured by the current camera
         for filename in filenames:
             i = int(filename.replace(".png", ""))
+
+            if i < int(args.first_index) or i >= int(args.last_index):
+                continue
 
             if cam_folder == "image_02":
                 calib_matrix = calib_data.calib.T_cam2_imu
@@ -78,6 +91,9 @@ if __name__ == "__main__":
     parser.add_argument("--depth-base-path", dest="depth_base_path", required=True, help="Path to the depth images of the raw dataset")
     parser.add_argument("--scene", dest="scene", required=True)
     parser.add_argument("--save-path", dest="save_path", required=True, help="Where to drop the transforms.json file")
+    parser.add_argument("--first_index", dest="first_index", required=False, default=0)
+    parser.add_argument("--last_index", dest="last_index", required=False, default=100000)
+    parser.add_argument("--camera", dest="cameras", nargs="+", default=[2, 3])
 
     args = parser.parse_args()
 
