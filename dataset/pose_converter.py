@@ -2,6 +2,7 @@ import numpy as np
 import os
 import argparse
 import json
+# import matplotlib.pyplot as plt
 
 def quat2rotm(q):
     """Convert quaternion into rotation matrix """
@@ -21,7 +22,32 @@ def pose_vec2mat(pvec, use_filler=True):
     if use_filler:
         filler = np.array([0.0, 0.0, 0.0, 1.0]).reshape([1, 1, 4])
         P = np.concatenate([P, filler], axis=1)
-    return P[0].tolist()
+
+    w2c = P[0]
+
+    c2w = np.linalg.inv(w2c)
+    
+    c2w[0:3, 1:3] *= -1
+    c2w = c2w[np.array([0, 1, 2, 3]), :]
+    c2w[2, :] *= -1
+
+    # rotmat = np.transpose(np.array([[0,  1, 0, 0],
+    #                                         [-1, 0, 0, 0],
+    #                                         [0,  0, 1, 0],
+    #                                         [0,  0, 0, 1]]))
+
+    # transform_matrix = rotmat.dot(mat)
+    # transform_matrix[0:3, 1:3] *= -1
+
+    #stackexchaneg advice
+    # rotmat = np.array([[1, 0, 0, 0],
+    #                     [0, -1, 0, 0],
+    #                     [0,  0, -1, 0],
+    #                     [0,  0, 0, 1]])
+    # transform_matrix = np.transpose(rotmat.dot(mat))
+    # # transform_matrix[0:3, 1:3] *= -1
+
+    return c2w.tolist()
 
 
 def orbslam_to_nerfstudio_matrix(row):
@@ -98,15 +124,34 @@ def build_nyu_nerfstudio_dict(save_loc, img_folder, pose_file):
         pose_lines = f.readlines()
     all_frames = sorted(os.listdir(full_folder_path))
 
+    # x_list = []
+    # y_list = []
+    # z_list = []
+
     for line in pose_lines:
         timestamp = line.split(" ")[0]
         if timestamp + "rgb.png" not in all_frames or timestamp + "depth.png" not in all_frames:
             continue
+        mat = pose_vec2mat(np.array([float(x) for x in line.split(" ")[1:]]) )
+        # x_list.append(mat[0][3])
+        # y_list.append(mat[1][3])
+        # z_list.append(mat[2][3])
+
         metadata_dict["frames"].append({
             "file_path": timestamp + "rgb.png",
-            "transform_matrix": pose_vec2mat(np.array([float(x) for x in line.split(" ")[1:]]) ),    #orbslam_to_nerfstudio_matrix(line.split(" ")),
+            "transform_matrix": mat,    #orbslam_to_nerfstudio_matrix(line.split(" ")),
             "depth_file_path": timestamp + "depth.png"
         })
+
+    # print(f"x mean: {np.mean(x_list)}, y mean: {np.mean(y_list)}, z mean: {np.mean(z_list)} ")
+    # print(f"x max: {np.max(x_list)}, y max: {np.max(y_list)}, z max: {np.max(z_list)} ")
+    # print(f"x min: {np.min(x_list)}, y min: {np.min(y_list)}, z min: {np.min(z_list)} ")    
+    # print(f"x std: {np.std(x_list)}, y std: {np.std(y_list)}, z std: {np.std(z_list)} ")
+
+    # fig = plt.figure()
+    # ax = fig.add_subplot(projection='3d')
+    # ax.scatter(x_list, y_list, z_list)
+    # plt.show()
 
     return metadata_dict
 
