@@ -27,17 +27,17 @@ def pose_vec2mat(pvec, use_filler=True):
 
     c2w = np.linalg.inv(w2c)
     
-    c2w[0:3, 1:3] *= -1
-    c2w = c2w[np.array([1, 0, 2, 3]), :]
-    c2w[2, :] *= -1
+    # c2w[0:3, 1:3] *= -1
+    # c2w = c2w[np.array([1, 0, 2, 3]), :]
+    # c2w[2, :] *= -1
 
-    # rotmat = np.transpose(np.array([[0,  1, 0, 0],
-    #                                         [-1, 0, 0, 0],
-    #                                         [0,  0, 1, 0],
-    #                                         [0,  0, 0, 1]]))
+    rotmat = np.transpose(np.array([[0,  1, 0, 0],
+                                            [-1, 0, 0, 0],
+                                            [0,  0, 1, 0],
+                                            [0,  0, 0, 1]]))
 
-    # transform_matrix = rotmat.dot(mat)
-    # transform_matrix[0:3, 1:3] *= -1
+    transform_matrix = rotmat.dot(c2w)
+    transform_matrix[0:3, 1:3] *= -1
 
     #stackexchaneg advice
     # rotmat = np.array([[1, 0, 0, 0],
