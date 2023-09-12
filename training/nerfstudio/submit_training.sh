@@ -6,9 +6,8 @@
 #SBATCH --gpus=rtx_3090:1
 #SBATCH -A s_stud_infk 
 #SBATCH --job-name=nerfstudio_training
-#SBATCH --output=nerfstudio_training.out
-#SBATCH --error=nerfstudio_training.err
-#SBATCH --array=0-4
+#SBATCH --output=nerfstudio_training_%A_%a.out
+#SBATCH --array=40-49
 
 datasets=(/cluster/project/infk/courses/252-0579-00L/group26/sniall/kitti/datasets_cvpr/*/)
 datasets=$(echo $datasets | xargs -n1 | sort | xargs)
@@ -21,7 +20,7 @@ source /cluster/project/infk/courses/252-0579-00L/group26/nerfstudio/venv/bin/ac
 
 ns-train depth-nerfacto-huge \
 --vis wandb \
---experiment-name (basename $data_path) \
+--experiment-name $(basename $data_path) \
 --steps-per-save 5000 \
 --max-num-iterations 30000 \
 --steps-per-eval-image 1000 \
