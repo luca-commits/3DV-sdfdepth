@@ -16,7 +16,7 @@ module purge
 module load gcc/8.2.0 cuda/11.8.0 python/3.9.9 eth_proxy
 source /cluster/project/infk/courses/252-0579-00L/group26/nerfstudio/venv/bin/activate
 
-ns-train depth-nerfacto \
+ns-train depth-nerfacto-huge \
 --vis wandb \
 --experiment-name ${SCENE_NAME} \
 --steps-per-save 5000 \
