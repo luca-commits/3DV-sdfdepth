@@ -165,3 +165,6 @@ sandbox.ipynb
 
 pretrained/
 wandb/
+training/nerfstudio/outputs/*
+training/nerfstudio/*.err
+training/nerfstudio/*.out
