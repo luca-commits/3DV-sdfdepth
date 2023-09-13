@@ -1,13 +1,13 @@
 #!/bin/bash
 
-#SBATCH -c 8
+#SBATCH -c 4
 #SBATCH --time=1:00:00
-#SBATCH --mem-per-cpu=8G
+#SBATCH --mem-per-cpu=4G
 #SBATCH --gpus=rtx_3090:1
-#SBATCH -A s_stud_infk
+#SBATCH -A ls_polle
 #SBATCH --job-name=novel_views
 #SBATCH --output=novel_views_%A_%a.out
-#SBATCH --array=0
+#SBATCH --array=0-4,25-59
 
 angle=10
 
@@ -17,10 +17,10 @@ datasets=$(basename $(echo $datasets | xargs -n1 | sort | xargs))
 dataset=${datasets[$SLURM_ARRAY_TASK_ID]}
 
 models=(./outputs/$dataset/depth-nerfacto/*/)
-models=$(echo $models | xargs -n1 | sort -r | xargs)
+models=$(echo $models | xargs -n1 | sort | xargs)
 
 # Select most recent run
-config_path=${models[0]}config.yml
+config_path=${models[-1]}config.yml
 
 module purge
 module load gcc/8.2.0 cuda/11.8.0 python/3.9.9 ffmpeg/5.0 eth_proxy
