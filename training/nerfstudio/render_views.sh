@@ -20,7 +20,7 @@ models=(./outputs/$dataset/depth-nerfacto/*/)
 models=$(echo $models | xargs -n1 | sort -r | xargs)
 
 # Select most recent run
-config_path=${models[1]}config.yml
+config_path=${models[0]}config.yml
 
 module purge
 module load gcc/8.2.0 cuda/11.8.0 python/3.9.9 ffmpeg/5.0 eth_proxy
@@ -31,7 +31,7 @@ ns-render angled \
 --rendered-output-names rgb depth \
 --pose-source train \
 --output-format raw-separate \
---output-path ./renders/$(basename ${models[1]})/pos_angle \
+--output-path ./renders/$(basename ${models[0]})/pos_angle \
 --angle $angle
 
 ns-render angled \
@@ -39,5 +39,5 @@ ns-render angled \
 --rendered-output-names rgb depth \
 --pose-source train \
 --output-format raw-separate \
---output-path ./renders/$(basename ${models[1]})/neg_angle \
+--output-path ./renders/$(basename ${models[0]})/neg_angle \
 --angle -$angle
