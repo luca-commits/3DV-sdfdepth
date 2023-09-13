@@ -16,7 +16,8 @@ datasets=$(basename $(echo $datasets | xargs -n1 | sort | xargs))
 
 dataset=${datasets[$SLURM_ARRAY_TASK_ID]}
 
-models=(./outputs/$dataset/depth-nerfacto/*/)
+# models=(/cluster/project/infk/courses/252-0579-00L/group26/cfeldmann/3dv_sdfdepth/training/nerfstudio/outputs/$dataset/depth-nerfacto/*/)
+models=(./outputs/$(basename $dataset)/depth-nerfacto/*/)
 models=$(echo $models | xargs -n1 | sort | xargs)
 
 # Select most recent run
@@ -31,7 +32,7 @@ ns-render angled \
 --rendered-output-names rgb depth \
 --pose-source train \
 --output-format raw-separate \
---output-path ./renders/$(basename ${models[0]})/pos_angle \
+--output-path ./renders/$(basename $dataset)/pos_angle \
 --angle $angle
 
 ns-render angled \
@@ -39,5 +40,5 @@ ns-render angled \
 --rendered-output-names rgb depth \
 --pose-source train \
 --output-format raw-separate \
---output-path ./renders/$(basename ${models[0]})/neg_angle \
+--output-path ./renders/$(basename $dataset)/neg_angle \
 --angle -$angle
