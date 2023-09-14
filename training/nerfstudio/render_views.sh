@@ -4,10 +4,10 @@
 #SBATCH --time=1:00:00
 #SBATCH --mem-per-cpu=4G
 #SBATCH --gpus=rtx_3090:1
-#SBATCH -A ls_polle
+#SBATCH -A s_stud_infk
 #SBATCH --job-name=novel_views
 #SBATCH --output=novel_views_%A_%a.out
-#SBATCH --array=0-4,25-59
+#SBATCH --array=15-24
 
 angle=10
 
@@ -16,7 +16,12 @@ datasets=$(basename $(echo $datasets | xargs -n1 | sort | xargs))
 
 dataset=${datasets[$SLURM_ARRAY_TASK_ID]}
 
-# models=(/cluster/project/infk/courses/252-0579-00L/group26/cfeldmann/3dv_sdfdepth/training/nerfstudio/outputs/$dataset/depth-nerfacto/*/)
+wd=(/cluster/project/infk/courses/252-0579-00L/group26/lrabuzin/nerfstudio_training/)
+# wd=(/cluster/project/infk/courses/252-0579-00L/group26/cfeldmann/3dv_sdfdepth/training/nerfstudio/)
+# wd=(./)
+
+cd $wd
+
 models=(./outputs/$(basename $dataset)/depth-nerfacto/*/)
 models=$(echo $models | xargs -n1 | sort | xargs)
 
@@ -32,7 +37,7 @@ ns-render angled \
 --rendered-output-names rgb depth \
 --pose-source train \
 --output-format raw-separate \
---output-path ./renders/$(basename $dataset)/pos_angle \
+--output-path /cluster/project/infk/courses/252-0579-00L/group26/sniall/3dv_sdfdepth/training/nerfstudio/renders/$(basename $dataset)/pos_angle \
 --angle $angle
 
 ns-render angled \
@@ -40,5 +45,5 @@ ns-render angled \
 --rendered-output-names rgb depth \
 --pose-source train \
 --output-format raw-separate \
---output-path ./renders/$(basename $dataset)/neg_angle \
+--output-path /cluster/project/infk/courses/252-0579-00L/group26/sniall/3dv_sdfdepth/training/nerfstudio/renders/$(basename $dataset)/neg_angle \
 --angle -$angle
