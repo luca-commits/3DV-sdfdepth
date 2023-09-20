@@ -7,10 +7,10 @@ def center_crop_image(image_path, crop_pixels):
         width, height = img.size
 
         # Compute new coordinates for the center crop
-        left = (width - crop_pixels)/2
-        top = (height - crop_pixels)/2
-        right = (width + crop_pixels)/2
-        bottom = (height + crop_pixels)/2
+        left = crop_pixels
+        top = crop_pixels
+        right = width - crop_pixels
+        bottom = height - crop_pixels
         
         # Check if the cropping is feasible
         if left < 0 or top < 0 or right > width or bottom > height:
@@ -18,6 +18,9 @@ def center_crop_image(image_path, crop_pixels):
             return
 
         cropped_img = img.crop((left, top, right, bottom))
+        #create a new folder called cropped if it doesn't exist
+        if not os.path.exists("cropped"):
+            os.makedirs("cropped")
         cropped_img.save("cropped/" + os.path.basename(image_path))
 
 def center_crop_all_images(directory, crop_pixels):
@@ -28,7 +31,7 @@ def center_crop_all_images(directory, crop_pixels):
                 center_crop_image(image_path, crop_pixels)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Generate Nerfstudio dataset for NYU scene')
+    parser = argparse.ArgumentParser(description='Crop given number of pixels on all sides of the image for all images in a folder')
     parser.add_argument('--basedir', type=str, required=True)
     parser.add_argument('--img_folder', type=str, required=True)
     parser.add_argument('--pixels', type=int, required=True)
