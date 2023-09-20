@@ -19,9 +19,9 @@ def center_crop_image(image_path, crop_pixels):
 
         cropped_img = img.crop((left, top, right, bottom))
         #create a new folder called cropped in the location of the image if it doesn't exist
-        if not os.path.exists(os.path.join(os.path.pardir, "cropped")):
-            os.makedirs(os.path.join(os.path.pardir, "cropped"))
-        cropped_img.save(os.path.join(os.path.pardir, "cropped", os.path.basename(image_path)))
+        if not os.path.exists(os.path.join(os.path.dirname(image_path), "cropped")):
+            os.makedirs(os.path.join(os.path.dirname(image_path), "cropped"))
+        cropped_img.save(os.path.join(os.path.dirname(image_path), "cropped", os.path.basename(image_path)))
 
 def center_crop_all_images(directory, crop_pixels):
     for root, _, files in os.walk(directory):
