@@ -4,6 +4,7 @@ import json
 
 import numpy as np
 import pykitti
+import cv2
 
 def main(args):
     date = args.scene[:10]
@@ -106,7 +107,10 @@ def main(args):
                 #Only add the images which belong to the section between the current and next cut
                 if i >= scene_cuts[k] and (k == len(scene_cuts)-1 or i < scene_cuts[k+1]):
 
-                    # print(i)
+                    # Skip frame if forward velocity is less than 1 m/s (~3.6 km/h)
+                    if calib_data.oxts[i].packet.vf < 1.:
+                        # print("WARNING: Skipping frame because forward velocity is less than 1 m/s (~3.6 km/h)")
+                        continue
 
                     if cam_folder == "image_02":
                         calib_matrix = calib_data.calib.T_cam2_imu
@@ -127,7 +131,11 @@ def main(args):
                         "depth_file_path": f"{depth_path}/{filename}"
                     })
 
-        height, width, _ = cv2.imread(frames[0]["file_path"]).shape
+        if len(frames) > 0:
+            height, width, _ = cv2.imread(frames[0]["file_path"]).shape
+        else:
+            print("WARNING: Dataset is empty")
+            height, width = 1, 1
 
         intrinsics = {
             "fl_x": calib_data.calib.P_rect_20[0, 0],
