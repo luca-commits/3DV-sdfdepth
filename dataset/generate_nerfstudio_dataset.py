@@ -4,6 +4,7 @@ import json
 
 import numpy as np
 import pykitti
+import cv2
 
 def main(args):
     date = args.scene[:10]
@@ -61,14 +62,16 @@ def main(args):
                 "file_path": f"{rgb_path}/{filename}",
                 "depth_file_path": f"{depth_path}/{filename}"
             })
+    
+    height, width, _ = cv2.imread(frames[0]["file_path"]).shape
 
     intrinsics = {
         "fl_x": calib_data.calib.P_rect_20[0, 0],
         "fl_y": calib_data.calib.P_rect_20[1, 1],
         "cx": calib_data.calib.P_rect_20[0, 2],
         "cy": calib_data.calib.P_rect_20[1, 2],
-        "w": 1242,
-        "h": 375,
+        "w": width,
+        "h": height,
         "camera_model": "OPENCV",
         "k1": 0,
         "k2": 0,
