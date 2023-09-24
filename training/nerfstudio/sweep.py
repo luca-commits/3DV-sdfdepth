@@ -8,7 +8,7 @@ args = parser.parse_args()
 
 sweep_configuration = {
     "name": args.data.split("/")[-2],
-    "method": "bayes",
+    "method": "grid",
     "metric": {"name": "Eval Images Metrics Dict (all images)/rgb_depth_tradeoff", "goal": "minimize"},
     "parameters": {
         "camera_optimizer": {"values": ["off", "SO3xR3"]},
