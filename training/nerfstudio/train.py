@@ -18,8 +18,6 @@ if args.sweep is not None:
         }
     }
 
-    sweep_id = wandb.sweep(sweep=sweep_configuration, project="nerfstudio-project")
-
     def train():
         wandb.init()
 
@@ -28,7 +26,7 @@ if args.sweep is not None:
             --experiment-name $(basename {args.data})_{wandb.config.depth_loss_mult}_{wandb.config.camera_optimizer} \
             --steps-per-save 5000 \
             --max-num-iterations 10000 \
-            --steps-per-eval-image 1000 \
+            --steps-per-eval-image 5000 \
             --steps-per-eval-all-images 1000 \
             --pipeline.model.depth-loss-mult {wandb.config.depth_loss_mult} \
             --pipeline.model.predict-normals False \
@@ -38,7 +36,15 @@ if args.sweep is not None:
             --data {args.data} \
             --depth-unit-scale-factor 0.00390625')
 
-    wandb.agent(sweep_id, function=train, count=10)
+
+    sweeps = wandb.Api().project("nerfstudio-project").sweeps()
+
+    # only run sweep if there is no previous sweep of this scene
+    if len([sweep for sweep in list(sweeps) if args.data.split("/")[-2] in sweep.name]) == 0:
+        sweep_id = wandb.sweep(sweep=sweep_configuration, project="nerfstudio-project")
+        wandb.agent(sweep_id, function=train, count=10)
+    else:
+        print("Sweep already completed. QUIT")
 else:
     name = args.data.split("/")[-2]
 
