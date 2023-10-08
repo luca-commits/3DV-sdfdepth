@@ -40,10 +40,10 @@ extrinsic_matrix = np.array(transform_matrix)
 extrinsic_matrix[0:3, 1:3] *= -1
 
 # Rotate 180° and see road from other side
-extrinsic_matrix = np.dot(extrinsic_matrix, np.array([[1, 0, 0, 0], 
-                                                        [0, -1, 0, 7],
-                                                        [0, 0, 1, 0],
-                                                        [0, 0, 0, 1]]))
+# extrinsic_matrix = np.dot(extrinsic_matrix, np.array([[1, 0, 0, 0], 
+#                                                         [0, -1, 0, 7],
+#                                                         [0, 0, 1, 0],
+#                                                         [0, 0, 0, 1]]))
 
 
 transformed_point_cloud = np.dot(np.linalg.inv(extrinsic_matrix)[:3, :3], point_cloud_points.T) + np.linalg.inv(extrinsic_matrix)[:3, 3][:, np.newaxis]
