@@ -5,6 +5,7 @@ import json
 import numpy as np
 import pykitti
 import cv2
+import shutil
 
 def main(args):
     date = args.scene[:10]
@@ -136,6 +137,16 @@ def main(args):
         else:
             print("WARNING: Dataset is empty")
             height, width = 1, 1
+
+            # Delete created empty directory
+            try:
+                shutil.rmtree(indexed_save_path)
+            except OSError as e:
+                print("Error: %s - %s." % (e.filename, e.strerror))
+
+            # Skip saving of transform.json
+            continue
+
 
         intrinsics = {
             "fl_x": calib_data.calib.P_rect_20[0, 0],
