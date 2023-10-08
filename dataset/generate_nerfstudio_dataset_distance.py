@@ -7,11 +7,22 @@ import pykitti
 import cv2
 import shutil
 
+from projections_inv import SensorFusionInv
+
 def main(args):
     date = args.scene[:10]
     drive = args.scene[-9:-5]
 
+    # Corresponds to 'data'
     calib_data = pykitti.raw(args.rgb_base_path, date, drive)
+
+    base_data_folder = f'{args.rgb_base_path}/{date}'
+    cam_calibs = base_data_folder + '/calib_cam_to_cam.txt'
+
+    data_folder = os.path.join(base_data_folder, f"{date}_drive_{drive}_sync")
+    save_loc = f"/cluster/project/infk/courses/252-0579-00L/group26/nihars_tests/kitti/{date}_drive_{drive}_sync/"
+    annotated_depths_path = os.path.join(f"{date}_drive_{drive}_sync/proj_depth/groundtruth/")
+
 
     cam_folders = []
 
@@ -78,7 +89,6 @@ def main(args):
 
     print(scene_cuts)
 
-
     for k in range(len(scene_cuts)):
 
         indexed_save_path = args.save_path + "_" + str(k)
@@ -90,6 +100,9 @@ def main(args):
         # List to save transform matrix and paths for each frame
         frames = []
 
+        fused_sensors = SensorFusionInv(base_data_folder, calib_data)
+        xyz_pointcloud = []
+        rgb_pointcloud = []
         # Iterate over both cameras
         for cam_folder in cam_folders:
             rgb_path = f"{args.rgb_base_path}/{date}/{args.scene}/{cam_folder}/data"
@@ -99,38 +112,42 @@ def main(args):
             depth_files = [ f for f in os.listdir(depth_path) if ".png" in f ]
 
             # Intersection of RGB and depth images
-            filenames = [ f for f in sorted(rgb_files) if f in depth_files ]
+            # Only add the images which belong to the section between the current and next cut
+            filenames = [ f for f in sorted(rgb_files) if (f in depth_files and check_if_valid_file(f, scene_cuts, k)) ]
 
-            # Iterate over all frames captured by the current camera
-            for filename in filenames:
-                i = int(filename.replace(".png", ""))
+            cam_id = int(cam_folder[-2:])
+            # breakpoint()
+            if cam_folder == "image_02":
+                calib_matrix = calib_data.calib.T_cam2_imu
+            else:
+                calib_matrix = calib_data.calib.T_cam3_imu
+            # Adjust coordinate systems
+            rotmat = np.transpose(np.array([[0,  1, 0, 0],
+                                            [-1, 0, 0, 0],
+                                            [0,  0, 1, 0],
+                                            [0,  0, 0, 1]]))
+        
+            filenames = [ f for f in sorted(filenames) if check_if_valid_velocity(f, calib_data)]
+            transform_matrices = [get_transform_mat(rotmat, calib_data, calib_matrix, f) for f in sorted(filenames)]
+            transform_matrices_pc = [get_transform_mat_pc(rotmat, calib_data, f) for f in sorted(filenames)]
 
-                #Only add the images which belong to the section between the current and next cut
-                if i >= scene_cuts[k] and (k == len(scene_cuts)-1 or i < scene_cuts[k+1]):
+            # For mesh
+            frame_ids = [int(f.replace(".png", "")) for f in sorted(filenames)]
+            depth_img_paths = [os.path.join(depth_path, f) for f in sorted(filenames)]
+            rgb_img_paths = [os.path.join(rgb_path, f) for f in sorted(filenames)]
 
-                    # Skip frame if forward velocity is less than 1 m/s (~3.6 km/h)
-                    if calib_data.oxts[i].packet.vf < 1.:
-                        # print("WARNING: Skipping frame because forward velocity is less than 1 m/s (~3.6 km/h)")
-                        continue
+            # frame_ids: List[int] = None, depth_images: List[np.ndarray] = None, rgb_images: List[np.ndarray] = None)
+            pc_tmp, rgb_tmp = fused_sensors(frame_ids, depth_img_paths, rgb_img_paths, transform_matrices_pc, cam=cam_id) # Transformation from world to imu
+            xyz_pointcloud.append(pc_tmp)
+            rgb_pointcloud.append(rgb_tmp)
 
-                    if cam_folder == "image_02":
-                        calib_matrix = calib_data.calib.T_cam2_imu
-                    else:
-                        calib_matrix = calib_data.calib.T_cam3_imu
-                    # Adjust coordinate systems
-                    rotmat = np.transpose(np.array([[0,  1, 0, 0],
-                                                    [-1, 0, 0, 0],
-                                                    [0,  0, 1, 0],
-                                                    [0,  0, 0, 1]]))
-
-                    transform_matrix = rotmat.dot(calib_data.oxts[i].T_w_imu.dot(np.linalg.inv(calib_matrix)))
-                    transform_matrix[0:3, 1:3] *= -1
-
-                    frames.append({
-                        "transform_matrix": transform_matrix.tolist(),
-                        "file_path": f"{rgb_path}/{filename}",
-                        "depth_file_path": f"{depth_path}/{filename}"
-                    })
+            # Iterate over all valid frames captured by the current camera
+            for filename, transform_matrix in zip(filenames, transform_matrices):
+                frames.append({
+                    "transform_matrix": transform_matrix.tolist(),
+                    "file_path": f"{rgb_path}/{filename}",
+                    "depth_file_path": f"{depth_path}/{filename}"
+                })
 
         if len(frames) > 0:
             height, width, _ = cv2.imread(frames[0]["file_path"]).shape
@@ -146,6 +163,9 @@ def main(args):
 
             # Skip saving of transform.json
             continue
+        merged_pc = np.concatenate(xyz_pointcloud)
+        merged_rgb = np.concatenate(rgb_pointcloud)
+        np.savez(os.path.join(indexed_save_path, "pointcloud.npz"), xyz=merged_pc, rgb=merged_rgb)
 
 
         intrinsics = {
@@ -170,6 +190,29 @@ def main(args):
         # Save transforms
         with open(os.path.join(indexed_save_path, 'transforms.json'),'w') as f:
             json.dump(transforms, f, indent=4)
+
+
+def check_if_valid_file(filename, scene_cuts, k):
+    i = int(filename.replace(".png", ""))
+    return (i >= scene_cuts[k] and (k == len(scene_cuts)-1 or i < scene_cuts[k+1]))
+
+def check_if_valid_velocity(filename, calib_data, thr=1.0):
+    i = int(filename.replace(".png", ""))
+    return calib_data.oxts[i].packet.vf >= thr
+
+def get_transform_mat(rotmat, calib_data, calib_matrix, filename):
+    i = int(filename.replace(".png", ""))
+    transform_matrix = rotmat.dot(calib_data.oxts[i].T_w_imu.dot(np.linalg.inv(calib_matrix)))
+    transform_matrix[0:3, 1:3] *= -1
+    return transform_matrix
+
+def get_transform_mat_pc(rotmat, calib_data, filename):
+    velo_2_imu = calib_data.calib.T_velo_imu
+    i = int(filename.replace(".png", ""))
+    transform_matrix = rotmat.dot(calib_data.oxts[i].T_w_imu.dot(velo_2_imu))
+    transform_matrix[0:3, 1:3] *= -1
+    return transform_matrix
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parse raw KITTI scence into a Nerfstudio dataset")
