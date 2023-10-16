@@ -209,7 +209,7 @@ def get_transform_mat(rotmat, calib_data, calib_matrix, filename):
 def get_transform_mat_pc(rotmat, calib_data, filename):
     velo_2_imu = calib_data.calib.T_velo_imu
     i = int(filename.replace(".png", ""))
-    transform_matrix = rotmat.dot(calib_data.oxts[i].T_w_imu.dot(velo_2_imu))
+    transform_matrix = rotmat.dot(calib_data.oxts[i].T_w_imu.dot(np.linalg.inv(velo_2_imu)))
     transform_matrix[0:3, 1:3] *= -1
     return transform_matrix
 
