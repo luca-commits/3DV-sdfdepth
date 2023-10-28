@@ -8,7 +8,7 @@ np.set_printoptions(precision=2)
 jsonfile = "/cluster/home/nihars/mdeNeRF/newgroup/cfeldmann/for_nikolas/transforms.json"
 
 # Change this one to the path where the renders are stored
-poses_path = "/cluster/home/nihars/mdeNeRF/newgroup/nihars_tests/renders_angled_15/"
+poses_path = "/cluster/home/nihars/mdeNeRF/newgroup/nihars_tests/renders_translated_0.15/"
 
 # load json file from path
 with open(jsonfile) as f:
