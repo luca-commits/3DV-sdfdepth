@@ -3,7 +3,7 @@ from glob import glob
 import json
 import pandas as pd
 
-models_dir = "/home/casimir/ETH/3dv_sdfdepth/training/nerfstudio/outputs/*_distance/"
+models_dir = "/cluster/project/infk/courses/252-0579-00L/group26/sniall/3dv_sdfdepth/training/nerfstudio/outputs-post-sweep/*/"
 
 models = sorted(glob(models_dir))
 
@@ -32,19 +32,26 @@ for model in models:
 
     json_path = latest_subdir + "wandb/latest-run/files/wandb-summary.json"   
 
-    with open(json_path) as json_file:
-        data = json.load(json_file)
-        metric_dict = {}
+    try:
+        with open(json_path) as json_file:
+            data = json.load(json_file)
+            metric_dict = {}
 
-        metric_dict["scene"] = model.split('/')[-2]
+            metric_dict["scene"] = model.split('/')[-2]
 
-        if metric_list[0] in data:
-            num_models += 1
+            if metric_list[0] in data:
+                for metric in metric_list:
+                    metric_dict[metric] = data[metric]
 
-            for metric in metric_list:
-                metric_dict[metric] = data[metric]
-
-            all_data.append(metric_dict)
+                if metric_dict["Eval Images Metrics Dict (all images)/lpips"] < 0.22 and metric_dict["Eval Images Metrics Dict (all images)/depth_abs_rel"] < 0.05:
+                    num_models += 1
+                    all_data.append(metric_dict)
+    except KeyError:
+        print(f"{model}: Does not contain metrics")
+        continue
+    except FileNotFoundError:
+        print(f"{model}: Could not find W&B Summary")
+        continue
 
 print("Valid runs: ", num_models)
 
