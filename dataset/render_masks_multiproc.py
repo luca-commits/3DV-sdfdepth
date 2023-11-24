@@ -1,6 +1,7 @@
 import numpy as np
 import os 
 import json
+import sys
 import cv2 as cv
 np.set_printoptions(precision=2)
 
@@ -8,20 +9,27 @@ np.set_printoptions(precision=2)
 # jsonfile = "/cluster/home/nihars/mdeNeRF/newgroup/cfeldmann/for_nikolas/transforms.json"
 
 # Change this one to the path where the renders are stored
-poses_path = "/cluster/project/infk/courses/252-0579-00L/group26/sniall/3dv_sdfdepth/training/nerfstudio/renders_interpolate_post_sweep/"
-
-save_path = poses_path.replace("sniall", "nihars_tests")
+poses_path = "/cluster/project/infk/courses/252-0579-00L/group26/sniall/3dv_sdfdepth/training/nerfstudio/renders_angled_3_post_sweep/"
 
 dirs = os.listdir(poses_path)
 
+# poses_path = first argument of call "python render_masks_multiproc.py path/to/renders
+
 # scenes e.g. ['2011_09_26_drive_0001_sync_0', ..., '2011_09_26_drive_0093_sync_3']
-for dir in dirs[::-1]:
+
+if True:
+    poses_path = sys.argv[1]
+    save_path = poses_path.replace("sniall", "nihars_tests")
+    dir_path = sys.argv[2]
+    dir = dir_path.split("/")[-1]
+    print(dir)
+
     path = f"/cluster/home/nihars/mdeNeRF/newgroup/nihars_tests/kitti/datasets_cvpr/{dir}/pointcloud.npz"
     transforms_path = f"/cluster/home/nihars/mdeNeRF/newgroup/nihars_tests/kitti/datasets_cvpr/{dir}/transforms.json"
 
     if not os.path.isfile(path):
         print(f"skipping {path}")
-        continue
+        sys.exit(0)
 
     # load json file from path
     with open(transforms_path) as f:
@@ -53,8 +61,6 @@ for dir in dirs[::-1]:
     file_list = os.listdir(poses_file_dirs)
     if file_list[0].endswith(".png") or file_list[0].endswith(".json"):
         # post sweep or interpolate
-        H = 345
-        W = 1219 
         poses_file = os.path.join(poses_file_dirs, "cam_poses.json")
         render_path = poses_file_dirs
         save_render_path = save_file_dirs
@@ -64,19 +70,20 @@ for dir in dirs[::-1]:
         # if we don't have any poses: skip
         if not os.path.isfile(poses_file):
             print(f"skipping {poses_file}")
-            continue
+            sys.exit(0)
 
         with open(poses_file) as f:
             frames = json.load(f)
 
         # ----------------- for loop should start here ----------------
-
+        img = cv.imread(os.path.join(render_path, f"{0:05d}_rgb.png"))
+        H, W, _ = img.shape
         # Extract the transform_matrix from the JSON data
         for i, frame in enumerate(frames):
             #transform_matrix = frame["transform_matrix"]
-            if False and os.path.isfile(os.path.join(save_render_path, f"{i:05d}_mask.png")):
-                print(f"EXISTS: skipping {os.path.join(save_render_path, f'{i:05d}_mask.png')}")
-                continue
+            # if False and os.path.isfile(os.path.join(save_render_path, f"{i:05d}_mask.png")):
+            #     print(f"EXISTS: skipping {os.path.join(save_render_path, f'{i:05d}_mask.png')}")
+            #     continue
 
             # Convert the transform_matrix to a NumPy array
             extrinsic_matrix = np.array(frame + [[0,0,0,1]])
@@ -113,10 +120,12 @@ for dir in dirs[::-1]:
 
 
     else:
-
         for pose_file_dir in os.listdir(poses_file_dirs):
             poses_file = os.path.join(poses_file_dirs, pose_file_dir, "cam_poses.json")  
             render_path = os.path.join(poses_file_dirs, pose_file_dir)
+
+            save_render_path = render_path.replace("sniall", "nihars_tests")
+            os.makedirs(save_render_path, exist_ok=True)
 
             # if we don't have any poses: skip
             if not os.path.isfile(poses_file):
@@ -129,12 +138,15 @@ for dir in dirs[::-1]:
 
             # ----------------- for loop should start here ----------------
 
+            img = cv.imread(os.path.join(render_path, f"{0:05d}_rgb.png"))
+            H, W, _ = img.shape
             # Extract the transform_matrix from the JSON data
             for i, frame in enumerate(frames):
+                
                 #transform_matrix = frame["transform_matrix"]
-                if os.path.isfile(os.path.join(render_path, f"{i:05d}_mask.png")):
-                    print(f"EXISTS: skipping {os.path.join(render_path, f'{i:05d}_mask.png')}")
-                    continue
+                # if os.path.isfile(os.path.join(save_render_path, f"{i:05d}_mask.png")):
+                #     print(f"EXISTS: skipping {os.path.join(save_render_path, f'{i:05d}_mask.png')}")
+                #     continue
 
                 # Convert the transform_matrix to a NumPy array
                 extrinsic_matrix = np.array(frame + [[0,0,0,1]])
@@ -163,6 +175,6 @@ for dir in dirs[::-1]:
                 #     img[int(point[1]), int(point[0])] = color
 
                 # cv.imwrite(os.path.join(render_path, f"{i:05d}_real_rgb.png"), img)
-                cv.imwrite(os.path.join(render_path, f"{i:05d}_mask.png"), mask * 255)
+                cv.imwrite(os.path.join(save_render_path, f"{i:05d}_mask.png"), mask * 255)
                 # cv.imwrite(os.path.join(render_path, f"{i:05d}_rgb_gt.png"), img)
-                print(f"saved {os.path.join(render_path, f'{i:05d}_mask.png')}")
+                print(f"saved {os.path.join(save_render_path, f'{i:05d}_mask.png')}")

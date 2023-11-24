@@ -1,9 +1,16 @@
 import os
 import math
 
-with open('train_syncs.txt') as file:
-    scenes = [line.rstrip() for line in file]
+sweeps_path = '/cluster/project/infk/courses/252-0579-00L/group26/nihars_tests/outputs-post-sweep'
 
+all_dirs = [dire.split("sync")[0] + "sync" for dire in os.listdir(sweeps_path) if os.path.isdir(os.path.join(sweeps_path, dire))]
+
+scenes = set(all_dirs)
+
+# with open('train_syncs.txt') as file:
+#     scenes = [line.rstrip() for line in file]
+
+breakpoint()
  
 #scenes = ['2011_09_26_drive_0001_sync']
 
