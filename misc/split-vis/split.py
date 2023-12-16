@@ -12,6 +12,7 @@ root_dir = "comparisons"
 subfolders = sorted([ f.path for f in os.scandir(root_dir) if f.is_dir() ])
 
 for folder in subfolders:
+# for folder in subfolders[12:-1]:
 
     name = folder.split("/")[-1]
 
@@ -20,7 +21,11 @@ for folder in subfolders:
 
     h, w = img0.shape[: 2]
     skip = 14 # increase this to make it quicker, e.g. 14, 19, 21, 28 should work; some numbers might crash below.
+
+    while (w + h) % skip != 0:
+        skip += 1
     assert (w + h) % skip == 0
+    print("Using skip:", skip)
     vmin = np.min(img0[~np.isnan(img0)]) # MAKE SURE THIS IS A DEPTH IMAGE
     vmax = np.max(img0[~np.isnan(img0)])
 
