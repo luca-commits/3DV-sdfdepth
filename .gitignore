@@ -169,3 +169,4 @@ training/nerfstudio/outputs*/*
 training/nerfstudio/renders*/*
 training/nerfstudio/*.err
 training/nerfstudio/*.out
+misc/split-vis/comparisons
