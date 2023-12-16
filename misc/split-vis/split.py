@@ -11,23 +11,24 @@ root_dir = "comparisons"
 
 subfolders = sorted([ f.path for f in os.scandir(root_dir) if f.is_dir() ])
 
-for folder in subfolders:
-# for folder in subfolders[12:-1]:
+for folder in tqdm(subfolders):
 
     name = folder.split("/")[-1]
 
-    img0 = np.array(cv2.imread(folder + "/after.png", cv2.IMREAD_ANYDEPTH), dtype=float)
-    img1 = np.array(cv2.imread(folder + "/before.png", cv2.IMREAD_ANYDEPTH), dtype=float)
+    img0 = np.array(cv2.imread(folder + "/after.png", cv2.IMREAD_COLOR), dtype=np.dtype('uint8'))
+    img1 = np.array(cv2.imread(folder + "/before.png", cv2.IMREAD_COLOR), dtype=np.dtype('uint8'))
+
+    img0 = cv2.cvtColor(img0, cv2.COLOR_BGR2RGB)
+    img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
 
     h, w = img0.shape[: 2]
-    skip = 14 # increase this to make it quicker, e.g. 14, 19, 21, 28 should work; some numbers might crash below.
+
+    skip = 7 # increase this to make it quicker, e.g. 14, 19, 21, 28 should work; some numbers might crash below.
 
     while (w + h) % skip != 0:
         skip += 1
     assert (w + h) % skip == 0
     print("Using skip:", skip)
-    vmin = np.min(img0[~np.isnan(img0)]) # MAKE SURE THIS IS A DEPTH IMAGE
-    vmax = np.max(img0[~np.isnan(img0)])
 
 
     aux_path = Path(folder + "/aux")
@@ -37,17 +38,19 @@ for folder in subfolders:
         mask_top = np.triu(np.ones([h, w]).astype(bool), -didx)
 
         masked_img0 = np.array(img0)
-        masked_img0[~mask_top] = np.nan
+        masked_img0[~mask_top] = 0
         masked_img1 = np.array(img1)
-        masked_img1[mask_top] = np.nan
+        masked_img1[mask_top] = 0
 
-        # if it's an RGB image, then you don't need vmin / vmax
-        plt.imshow(masked_img0, vmin=vmin, vmax=vmax)
-        plt.imshow(masked_img1, vmin=vmin, vmax=vmax)
+        masked_img = masked_img0 + masked_img1
+
+
+        plt.imshow(masked_img)
         plt.axis('off')
         
         plt.tight_layout(h_pad=0, w_pad=-2.5)
         plt.savefig(aux_path / ("%03d.png" % idx), bbox_inches='tight', dpi=300)
         plt.close()
+
     subprocess.call(["ffmpeg", "-i", f"{str(aux_path)}/%03d.png", f"{folder}/{name}.mp4", "-y"])
     shutil.rmtree(aux_path)
