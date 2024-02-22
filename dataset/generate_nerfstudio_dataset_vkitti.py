@@ -21,7 +21,7 @@ def main(args):
     filenames = [ f for f in sorted(rgb_files) if f in depth_files ]
 
     # Load extrinsic calibration
-    extgt = pd.read_csv(extrinsic_file, sep="", index_col=False)
+    extgt = pd.read_csv(extrinsic_file, sep=" ", index_col=False)
 
 
     # Iterate over all frames captured by the current camera
