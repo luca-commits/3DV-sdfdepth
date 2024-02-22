@@ -3,7 +3,6 @@ import argparse
 import json
 
 import numpy as np
-import pykitti
 import cv2
 import pandas as pd
 
