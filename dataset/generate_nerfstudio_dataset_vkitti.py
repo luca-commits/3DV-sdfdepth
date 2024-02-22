@@ -39,7 +39,7 @@ def main(args):
         #                    [0,  0, -1, 0],
         #                    [0,  0,  0, 1]])
 
-        transform_matrix = ext_matrix
+        transform_matrix = np.linalg.inv(ext_matrix)
         transform_matrix[0:3, 1:3] *= -1
         transform_matrix = transform_matrix[np.array([1, 0, 2, 3]), :]
         transform_matrix[2, :] *= -1
