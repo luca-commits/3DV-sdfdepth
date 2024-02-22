@@ -33,13 +33,16 @@ def main(args):
 
         ext_matrix = np.array(extgt.iloc[i, 1:17]).reshape(4, 4)
 
-        # Adjust coordinate systems
-        rotmat = np.array([[1,  0,  0, 0],
-                           [0, -1,  0, 0],
-                           [0,  0, -1, 0],
-                           [0,  0,  0, 1]])
+        # # Adjust coordinate systems
+        # rotmat = np.array([[1,  0,  0, 0],
+        #                    [0, -1,  0, 0],
+        #                    [0,  0, -1, 0],
+        #                    [0,  0,  0, 1]])
 
-        transform_matrix = rotmat.dot(ext_matrix)
+        transform_matrix = ext_matrix
+        transform_matrix[0:3, 1:3] *= -1
+        transform_matrix = transform_matrix[np.array([1, 0, 2, 3]), :]
+        transform_matrix[2, :] *= -1
 
         frames.append({
             "transform_matrix": transform_matrix.tolist(),
