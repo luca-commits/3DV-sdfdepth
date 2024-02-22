@@ -40,7 +40,6 @@ def main(args):
                            [0,  0,  0, 1]])
 
         transform_matrix = rotmat.dot(ext_matrix)
-        transform_matrix[0:3, 1:3] *= -1
 
         frames.append({
             "transform_matrix": transform_matrix.tolist(),
