@@ -17,5 +17,5 @@ for scene in scenes:
                     --extrinsic-base-path /cluster/project/infk/courses/252-0579-00L/group26/vkitti/vkitti_1.3.1_extrinsicsgt \
                     --scene {scene} \
                     --world {world} \
-                    --save-path /cluster/project/infk/courses/252-0579-00L/group26/vkitti/nerfstudio_datasets/{scene}_{world} \
+                    --save-path /cluster/project/infk/courses/252-0579-00L/group26/vkitti/nerfstudio_datasets/{world}/{scene} \
                     --max-scene-size 50")
