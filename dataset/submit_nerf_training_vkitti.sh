@@ -20,5 +20,5 @@ source /cluster/project/infk/courses/252-0579-00L/group26/nerfstudio/venv/bin/ac
 # Loop through each scene and process
 for subscene in "${subscenes[@]}"; do
     data_path="$BASE_DIR/$world/$subscene/cropped"
-    python train_param_search.py --data $data_path --sparseness $sparseness --sweep
+    python nerf_training_vkitti_param_search.py --data $data_path --sparseness $sparseness --sweep
 done
